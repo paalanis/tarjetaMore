@@ -1,0 +1,53 @@
+# WhatsApp invite site
+
+## Objective
+
+Publish a test version of the envelope invitation so the full flow can be tried from a phone:
+WhatsApp link preview (sealed envelope image) -> envelope page animation -> final card with buttons.
+
+## Problem and why
+
+WhatsApp builds link previews by reading the published page, so the flow cannot be tested while the page
+only exists locally. Personal WhatsApp accounts cannot send buttons, and GIFs do not autoplay reliably,
+so the link preview (whose whole image is tappable) is the chosen entry point.
+
+## Scope
+
+- Own git repository for this folder (the repository detected before was `C:\`, not this project).
+- Static site in `docs/`: one general page and one per-guest test page (`marta/`), each with its own
+  Open Graph image.
+- Public GitHub repository `paalanis/tarjetaMore` with GitHub Pages serving `docs/`.
+
+## Constraints
+
+- `Invitados.xlsx` (guest phone numbers) must never be committed; it is excluded in `.gitignore`.
+- The site generator tooling lives in the session scratchpad for this test; moving it into the repo is a
+  follow-up.
+- Push, PR and merge decisions beyond this authorized test publish remain with Pablo.
+
+## Tasks
+
+- [x] T1 Repository setup: `git init`, `.gitignore`, feature branch. Route: inline (mechanical).
+  Evidence: `git rev-parse --show-toplevel` is the project folder; `git check-ignore` matches
+  `Invitados.xlsx`.
+- [x] T2 Build the test site: general page and `marta/` page with og:image tags. Route: inline (one
+  generator script, already-understood rendering code). Evidence: `docs/index.html`,
+  `docs/marta/index.html`, `docs/og/general.jpg` (39 KB), `docs/og/marta.jpg` (34 KB); both images were
+  reviewed visually.
+- [ ] T3 Create the public GitHub repository, push, enable Pages from `docs/`, and check that the pages
+  and images return HTTP 200. Route: inline (git/gh state commands).
+- [ ] T4 Pablo tests the flow from his phone. Pending on Pablo.
+
+## Acceptance criteria
+
+- `https://paalanis.github.io/tarjetaMore/` and `https://paalanis.github.io/tarjetaMore/marta/` load.
+- Both og:image URLs return HTTP 200 as JPEG under 600 KB.
+- Sending the link in WhatsApp shows the sealed-envelope preview (verified by Pablo).
+
+## Progress
+
+- T1 and T2 done and committed on `feat/whatsapp-invite-site`.
+
+## Next step
+
+- T3.

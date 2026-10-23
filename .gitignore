@@ -1,0 +1,7 @@
+# Guest list with phone numbers: never commit it.
+*.xlsx
+*.xls
+*.csv
+
+node_modules/
+out/
