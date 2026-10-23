@@ -1,0 +1,917 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Invitación · Mis XV de Morena</title>
+<meta name="description" content="05 de diciembre de 2026 · Salón Palatium Magnus. Te espero para celebrar mis quince.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://paalanis.github.io/tarjetaMore/invitacion/">
+<meta property="og:title" content="Invitación · Mis XV de Morena">
+<meta property="og:description" content="05 de diciembre de 2026 · Salón Palatium Magnus. Te espero para celebrar mis quince.">
+<meta property="og:image" content="https://paalanis.github.io/tarjetaMore/og/general.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<style>html, body { margin: 0; } [hidden] { display: none !important; }</style>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Great+Vibes&family=Montserrat:wght@200;400;500;600&display=swap">
+<style>
+  /* Palette and type: black and silver disco, with the gold crown as the single warm accent. */
+  :root {
+    --night: #050507;
+    --night-glow: #22222a;
+    --panel: #000000;
+    --panel-edge: rgba(255, 255, 255, 0.07);
+    --paper: #f3f3f5;
+    --paper-edge: #d6d6dc;
+    --ink: #111115;
+    --ink-soft: #4a4a55;
+    --silver: #dcdde3;
+    --silver-deep: #9b9da8;
+    --frame: #b6b8c1;
+    --white: #ffffff;
+    --gold: #dcb86a;
+    --placeholder: #e8c46a;
+    --bokeh: rgba(255, 255, 255, 0.08);
+    --glitter: rgba(255, 255, 255, 0.55);
+    --font-display: "Cinzel", "Trajan Pro", Georgia, serif;
+    --font-script: "Great Vibes", "Snell Roundhand", "Apple Chancery", cursive;
+    --font-body: "Montserrat", "Helvetica Neue", Arial, sans-serif;
+    color-scheme: dark;
+  }
+
+  @property --spin {
+    syntax: "<length>";
+    inherits: true;
+    initial-value: 0px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background-color: var(--night);
+    color: var(--white);
+    font-family: var(--font-body);
+    font-weight: 500;
+    line-height: 1.4;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .sky {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .crown { display: block; color: var(--gold); }
+
+  .section {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: 18px;
+    padding: 64px max(16px, env(safe-area-inset-right, 0px)) 64px max(16px, env(safe-area-inset-left, 0px));
+    overflow: hidden;
+    text-align: center;
+  }
+
+  .section--light {
+    background: var(--paper);
+    color: var(--ink);
+  }
+
+  .section--bokeh {
+    background-image:
+      radial-gradient(circle 54px at 8% 12%, var(--bokeh), transparent),
+      radial-gradient(circle 34px at 90% 8%, var(--bokeh), transparent),
+      radial-gradient(circle 70px at 96% 70%, var(--bokeh), transparent),
+      radial-gradient(circle 42px at 4% 82%, var(--bokeh), transparent),
+      radial-gradient(circle 26px at 70% 96%, var(--bokeh), transparent),
+      radial-gradient(80% 60% at 50% 50%, rgba(255, 255, 255, 0.05), transparent);
+  }
+
+  .section--glitter {
+    background-image:
+      radial-gradient(circle, var(--glitter) 0 0.8px, transparent 1.4px),
+      radial-gradient(circle, rgba(255, 255, 255, 0.3) 0 0.7px, transparent 1.2px),
+      radial-gradient(circle, rgba(255, 255, 255, 0.18) 0 1px, transparent 1.6px);
+    background-size: 13px 17px, 23px 19px, 31px 29px;
+    background-position: 0 0, 7px 5px, 3px 11px;
+  }
+
+  .panel {
+    position: relative;
+    z-index: 1;
+    box-sizing: border-box;
+    width: min(100%, 360px);
+    display: grid;
+    justify-items: center;
+    gap: 14px;
+    padding: 40px 22px;
+    background: var(--panel);
+    box-shadow: 0 0 0 1px var(--panel-edge), 0 20px 40px rgba(0, 0, 0, 0.5);
+  }
+
+  .icon {
+    width: 52px;
+    height: 52px;
+    color: var(--white);
+  }
+
+  .heading {
+    margin: 0;
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: clamp(1.8rem, 8vw, 2.3rem);
+    letter-spacing: 0.16em;
+    line-height: 1.2;
+    /* Letter spacing trails after the last glyph; pull it back so the word stays centered. */
+    margin-right: -0.16em;
+  }
+
+  .heading--caps {
+    font-size: clamp(1.05rem, 4.8vw, 1.3rem);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .lead {
+    margin: 0;
+    font-size: clamp(1.15rem, 5.2vw, 1.4rem);
+    font-weight: 600;
+    line-height: 1.35;
+    text-wrap: balance;
+  }
+
+  .body-text {
+    margin: 0;
+    max-width: 30ch;
+    font-size: clamp(1.05rem, 4.8vw, 1.25rem);
+    font-weight: 500;
+    line-height: 1.45;
+    text-wrap: balance;
+  }
+
+  .is-placeholder {
+    padding: 0 0.3em;
+    border: 1px dashed var(--placeholder);
+    border-radius: 3px;
+    color: var(--placeholder);
+    font-style: italic;
+    font-weight: 500;
+  }
+
+  .section--light .is-placeholder { color: #7a5a14; border-color: #b08a2e; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    box-sizing: border-box;
+    padding: 0.7rem 1.5rem;
+    border: 1px solid var(--white);
+    border-radius: 0;
+    background: var(--white);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 0.78rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .btn:hover { background: transparent; color: var(--white); }
+
+  .btn--dark { border-color: var(--ink); background: var(--ink); color: var(--white); }
+  .btn--dark:hover { background: transparent; color: var(--ink); }
+
+  .btn:focus-visible,
+  .note-field:focus-visible {
+    outline: 2px solid var(--silver);
+    outline-offset: 3px;
+  }
+
+  .section--light .btn:focus-visible,
+  .section--light .note-field:focus-visible { outline-color: var(--ink); }
+
+  /* Hero */
+
+  .hero {
+    box-sizing: border-box;
+    min-height: min(88svh, 720px);
+    align-content: center;
+    padding-top: 190px;
+    padding-bottom: 72px;
+    background:
+      radial-gradient(70% 45% at 50% 70%, rgba(255, 255, 255, 0.07), transparent),
+      radial-gradient(120% 70% at 50% 0%, var(--night-glow), var(--night) 70%);
+  }
+
+  .greeting {
+    margin: 0 0 6px;
+    font-size: 0.78rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--silver-deep);
+  }
+
+  .hero .crown {
+    width: clamp(88px, 26vw, 120px);
+    margin-bottom: -14px;
+    filter: drop-shadow(0 2px 6px rgba(220, 184, 106, 0.35));
+  }
+
+  .name {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(3.1rem, 16vw, 5.6rem);
+    letter-spacing: 0.06em;
+    margin-right: -0.06em;
+    line-height: 1;
+    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.8);
+  }
+
+  .script {
+    margin: 0;
+    font-family: var(--font-script);
+    font-weight: 400;
+    font-size: clamp(2.3rem, 11vw, 3.4rem);
+    line-height: 1.1;
+    word-spacing: 0.12em;
+    color: var(--silver);
+  }
+
+  .scroll-cue {
+    width: 22px;
+    height: 22px;
+    margin-top: 18px;
+    border-right: 1px solid var(--silver-deep);
+    border-bottom: 1px solid var(--silver-deep);
+    transform: rotate(45deg);
+    animation: cue 2.6s ease-in-out infinite;
+  }
+
+  @keyframes cue {
+    0%, 100% { transform: translateY(0) rotate(45deg); opacity: 0.5; }
+    50% { transform: translateY(6px) rotate(45deg); opacity: 1; }
+  }
+
+  /* Disco balls drawn in CSS: a lit sphere with a mirror-tile grid that slides sideways to fake a spin. */
+  .balls {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .ball {
+    --tile: 9px;
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: var(--size);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.95) 0 2%, rgba(255, 255, 255, 0.4) 7%, transparent 20%),
+      radial-gradient(circle at 42% 38%, transparent 28%, rgba(0, 0, 0, 0.82) 74%),
+      repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0 1px, transparent 1px var(--tile)),
+      repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.6) 0 1px, transparent 1px var(--tile)),
+      repeating-linear-gradient(35deg, rgba(255, 255, 255, 0.22) 0 var(--tile), transparent var(--tile) calc(var(--tile) * 2.6)),
+      radial-gradient(circle at 40% 35%, #d9dae0, #6d6e78 50%, #1a1a1f 80%);
+    background-position: 0 0, 0 0, var(--spin) 0, var(--spin) 0, var(--spin) 0, 0 0;
+    box-shadow: 0 0 40px rgba(255, 255, 255, 0.08);
+    animation: spin 14s linear infinite;
+  }
+
+  .ball::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 100%;
+    width: 1px;
+    height: 260px;
+    background: linear-gradient(transparent, rgba(220, 221, 227, 0.5));
+  }
+
+  @keyframes spin {
+    to { --spin: 117px; }
+  }
+
+  /* Countdown */
+
+  .countdown {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: clamp(2px, 1.2vw, 8px);
+    margin: 8px 0 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .unit {
+    display: grid;
+    justify-items: center;
+    gap: 4px;
+    min-width: 1.9ch;
+  }
+
+  .unit-value {
+    font-weight: 200;
+    font-size: clamp(2.5rem, 13vw, 3.8rem);
+    line-height: 1;
+  }
+
+  .unit-label {
+    font-size: 0.66rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .colon {
+    font-weight: 200;
+    font-size: clamp(2.2rem, 11vw, 3.2rem);
+    line-height: 1.05;
+    color: var(--ink-soft);
+  }
+
+  /* Message box with a double silver frame and squared corner ornaments. */
+
+  .frame {
+    position: relative;
+    box-sizing: border-box;
+    width: min(100%, 380px);
+    display: grid;
+    gap: 12px;
+    padding: 34px 26px 28px;
+    border: 4px double var(--frame);
+    text-align: left;
+  }
+
+  .frame::before {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    border: 1px solid var(--frame);
+    pointer-events: none;
+  }
+
+  .corner {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border: 3px double var(--frame);
+    background: var(--paper);
+  }
+
+  .corner:nth-of-type(1) { left: -11px; top: -11px; }
+  .corner:nth-of-type(2) { right: -11px; top: -11px; }
+  .corner:nth-of-type(3) { left: -11px; bottom: -11px; }
+  .corner:nth-of-type(4) { right: -11px; bottom: -11px; }
+
+  .note-label {
+    font-size: 1.15rem;
+    font-weight: 600;
+  }
+
+  .note-field {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 150px;
+    padding: 10px 12px;
+    border: 1px solid var(--paper-edge);
+    border-radius: 2px;
+    background: var(--white);
+    color: var(--ink);
+    font: inherit;
+    font-weight: 400;
+    font-size: 1rem;
+    resize: vertical;
+  }
+
+  .note-field[aria-invalid="true"] { border-color: #8a2b2b; }
+
+  .note-hint {
+    min-height: 1.2em;
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: var(--ink-soft);
+  }
+
+  .frame .btn { justify-self: center; }
+
+  /* Closing */
+
+  .closing .panel { padding: 64px 18px 56px; }
+
+  .signature {
+    position: relative;
+    margin: 0;
+    font-family: var(--font-script);
+    font-weight: 400;
+    font-size: clamp(4.2rem, 21vw, 6rem);
+    line-height: 1.1;
+    padding-top: 0.3em;
+  }
+
+  .signature .crown {
+    position: absolute;
+    right: 0.6em;
+    top: 0.06em;
+    width: 0.78em;
+    transform: rotate(10deg);
+  }
+
+  .farewell {
+    margin: 0;
+    font-size: 0.8rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--silver-deep);
+  }
+
+  /* In-page panels (dialogs) */
+
+  .sheet {
+    box-sizing: border-box;
+    width: min(calc(100% - 32px), 380px);
+    padding: 0;
+    border: 1px solid var(--panel-edge);
+    background: var(--panel);
+    color: var(--white);
+    text-align: center;
+  }
+
+  .sheet::backdrop { background: rgba(0, 0, 0, 0.72); }
+
+  .sheet-inner {
+    display: grid;
+    justify-items: center;
+    gap: 14px;
+    padding: 32px 22px 26px;
+  }
+
+  .sheet-title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .sheet-text {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 400;
+    line-height: 1.5;
+  }
+
+  .data-list {
+    display: grid;
+    gap: 10px;
+    width: 100%;
+    margin: 0;
+  }
+
+  .data-list dt {
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--silver-deep);
+  }
+
+  .data-list dd {
+    margin: 2px 0 0;
+    font-size: 1.15rem;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .copy-status {
+    min-height: 1.3em;
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: var(--silver);
+  }
+
+  .link-btn {
+    padding: 8px 12px;
+    border: 0;
+    background: none;
+    color: var(--silver-deep);
+    font: inherit;
+    font-size: 0.85rem;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    cursor: pointer;
+  }
+
+  .link-btn:hover { color: var(--white); }
+  .link-btn:focus-visible { outline: 2px solid var(--silver); outline-offset: 2px; }
+
+  @media (min-width: 720px) {
+    .section { padding-top: 88px; padding-bottom: 88px; }
+    .hero { padding-top: 260px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .ball, .scroll-cue { animation: none; }
+    .btn { transition: none; }
+  }
+</style>
+
+<svg width="0" height="0" style="position: absolute" aria-hidden="true" focusable="false">
+  <symbol id="crown" viewBox="0 0 64 40">
+    <path d="M9 31 L4 13 L16 23 L22 8 L27 19 L32 3 L37 19 L42 8 L48 23 L60 13 L55 31 Z"
+      fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M9 35.5 H55" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+    <g fill="currentColor">
+      <circle cx="4" cy="12" r="2.2"/><circle cx="22" cy="7" r="2.2"/><circle cx="32" cy="2.4" r="2.4"/>
+      <circle cx="42" cy="7" r="2.2"/><circle cx="60" cy="12" r="2.2"/>
+      <path d="M32 22 L35 26 L32 30 L29 26 Z"/>
+    </g>
+  </symbol>
+</svg>
+
+<canvas class="sky" id="sky" aria-hidden="true"></canvas>
+
+<main>
+  <header class="section hero">
+    <div class="balls" aria-hidden="true">
+      <span class="ball" style="--x: -34px; --y: -36px; --size: 138px"></span>
+      <span class="ball" style="--x: 36%; --y: -18px; --size: 104px; --tile: 8px"></span>
+      <span class="ball" style="--x: calc(100% - 128px); --y: 20px; --size: 176px; --tile: 10px"></span>
+    </div>
+    <p class="greeting" id="greeting" hidden></p>
+    <svg class="crown" viewBox="0 0 64 40" aria-hidden="true" focusable="false"><use href="#crown"/></svg>
+    <h1 class="name">MORENA</h1>
+    <p class="script">Mis quince años</p>
+    <span class="scroll-cue" aria-hidden="true"></span>
+  </header>
+
+  <section class="section section--light" aria-labelledby="countdownTitle">
+    <h2 class="lead" id="countdownTitle">El día más esperado de mi vida está llegando…</h2>
+    <div class="countdown" id="countdown" role="timer" aria-label="Cuenta regresiva">
+      <div class="unit"><span class="unit-value" data-unit="days">00</span><span class="unit-label">Días</span></div>
+      <span class="colon" aria-hidden="true">:</span>
+      <div class="unit"><span class="unit-value" data-unit="hours">00</span><span class="unit-label">Horas</span></div>
+      <span class="colon" aria-hidden="true">:</span>
+      <div class="unit"><span class="unit-value" data-unit="minutes">00</span><span class="unit-label">Minutos</span></div>
+      <span class="colon" aria-hidden="true">:</span>
+      <div class="unit"><span class="unit-value" data-unit="seconds">00</span><span class="unit-label">Segundos</span></div>
+    </div>
+  </section>
+
+  <section class="section section--bokeh" aria-labelledby="whenTitle">
+    <div class="panel">
+      <svg class="icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <rect x="7" y="10" width="34" height="31" rx="3"/>
+        <path d="M7 18h34M15 6v8M24 6v8M33 6v8"/>
+        <path d="M24 37C14 30 14 22 19.5 22C22 22 24 24 24 25.5C24 24 26 22 28.5 22C34 22 34 30 24 37Z" fill="currentColor"/>
+      </svg>
+      <h2 class="heading" id="whenTitle">¿Cuándo?</h2>
+      <p class="lead" id="dateLabel"></p>
+      <p class="body-text"><span id="timeLabel"></span></p>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="whereTitle">
+    <div class="balls" aria-hidden="true">
+      <span class="ball" style="--x: -60px; --y: 30%; --size: 150px"></span>
+      <span class="ball" style="--x: calc(100% - 70px); --y: 8%; --size: 120px; --tile: 8px"></span>
+    </div>
+    <div class="panel">
+      <svg class="icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M24 2v9"/>
+        <circle cx="24" cy="26" r="15"/>
+        <path d="M9 26h30M11 19h26M11 33h26M16 14h16M16 38h16"/>
+        <path d="M24 11c-5.5 4-5.5 26 0 30M24 11c5.5 4 5.5 26 0 30M24 11c-12 3-12 27 0 30M24 11c12 3 12 27 0 30"/>
+        <path d="M41 6l1 3 3 1-3 1-1 3-1-3-3-1 3-1z" fill="currentColor"/>
+      </svg>
+      <h2 class="heading" id="whereTitle">¿Dónde?</h2>
+      <p class="lead" id="venueLabel"></p>
+      <a class="btn" id="mapLink" href="#" target="_blank" rel="noopener">Ver mapa</a>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="dressTitle">
+    <svg class="icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <path d="M10 22l6-8h16l6 8-14 20z"/>
+      <path d="M10 22h28M16 14l4 8 4-8 4 8 4-8M20 22l4 20 4-20"/>
+      <path d="M24 3v5M14 5l2.5 4M34 5l-2.5 4M6 12l4 2M42 12l-4 2"/>
+    </svg>
+    <h2 class="heading" id="dressTitle">Dress code</h2>
+    <p class="lead" id="dressLabel"></p>
+    <button class="btn" type="button" data-open="restrictionsDialog">Ver restricciones</button>
+  </section>
+
+  <section class="section" aria-labelledby="giftTitle">
+    <h2 class="heading" id="giftTitle">Regalo</h2>
+    <p class="body-text">Tu presencia es mi mejor regalo; sin embargo, si pensabas hacer un obsequio, podés enviarlo al siguiente alias.</p>
+    <button class="btn" type="button" data-open="transferDialog">Datos para transferencia</button>
+  </section>
+
+  <section class="section section--glitter" aria-labelledby="rsvpTitle">
+    <div class="panel">
+      <svg class="icon" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+        <circle cx="19" cy="15" r="6.5" fill="currentColor"/>
+        <path d="M8 43V33c0-5.5 3.6-9 9.5-9H25l6.2-13.4c1-2.2 4.6-1.2 4.1 1.4L31 28v15z" fill="currentColor"/>
+      </svg>
+      <h2 class="heading heading--caps" id="rsvpTitle">Confirmá tu asistencia</h2>
+      <p class="lead">Antes del <span id="rsvpDeadline"></span></p>
+      <a class="btn" id="rsvpLink" href="#" target="_blank" rel="noopener">Confirmar</a>
+    </div>
+  </section>
+
+  <section class="section section--light" aria-label="Mensaje para Morena">
+    <form class="frame" id="noteForm" novalidate>
+      <span class="corner" aria-hidden="true"></span>
+      <span class="corner" aria-hidden="true"></span>
+      <span class="corner" aria-hidden="true"></span>
+      <span class="corner" aria-hidden="true"></span>
+      <label class="note-label" for="note">Sumá un mensaje bonito:</label>
+      <textarea class="note-field" id="note" name="note" maxlength="600" placeholder="Escribile unas palabras a Morena…" aria-describedby="noteHint"></textarea>
+      <p class="note-hint" id="noteHint" aria-live="polite">Se envía por WhatsApp.</p>
+      <button class="btn btn--dark" type="submit">Enviar mensaje</button>
+    </form>
+  </section>
+
+  <footer class="section section--bokeh closing">
+    <div class="panel">
+      <p class="signature">Morena<svg class="crown" viewBox="0 0 64 40" aria-hidden="true" focusable="false"><use href="#crown"/></svg></p>
+      <p class="farewell">¡Te espero!</p>
+    </div>
+  </footer>
+</main>
+
+<dialog class="sheet" id="restrictionsDialog" aria-labelledby="restrictionsTitle">
+  <div class="sheet-inner">
+    <h3 class="sheet-title" id="restrictionsTitle">Dress code</h3>
+    <p class="sheet-text" id="restrictionsText"></p>
+    <button class="btn" type="button" data-close>Cerrar</button>
+  </div>
+</dialog>
+
+<dialog class="sheet" id="transferDialog" aria-labelledby="transferTitle">
+  <div class="sheet-inner">
+    <h3 class="sheet-title" id="transferTitle">Datos para transferencia</h3>
+    <dl class="data-list">
+      <div><dt>Alias</dt><dd id="aliasValue"></dd></div>
+      <div><dt>Titular</dt><dd id="holderValue"></dd></div>
+    </dl>
+    <button class="btn" type="button" id="copyAlias">Copiar alias</button>
+    <p class="copy-status" id="copyStatus" aria-live="polite"></p>
+    <button class="link-btn" type="button" data-close>Cerrar</button>
+  </div>
+</dialog>
+
+<script>
+  (function () {
+    // Everything Pablo may need to edit lives here. Values starting with "[Completar" render as marked
+    // placeholders so they are easy to spot before the invitation is sent.
+    var CONFIG = {
+      // Event start in Argentina time (UTC-03:00). Set timeConfirmed to true once the hour is final.
+      eventStart: "2026-12-05T21:00:00-03:00",
+      timeConfirmed: false,
+      timePlaceholder: "[Completar: hora]",
+      venue: "Salón Palatium Magnus",
+      mapUrl: "https://maps.app.goo.gl/2pEdAkhitZjTjDFA8?g_st=ac",
+      dressCode: "Formal - Elegante",
+      restrictions: "[Completar: restricciones del dress code]",
+      giftAlias: "[Completar: alias]",
+      giftHolder: "[Completar: titular de la cuenta]",
+      // Final RSVP phone (Morena's mother): 5492615133030; using Pablo's number while testing.
+      rsvpPhone: "5492613829997",
+      rsvpMessage: "Hola! Quiero confirmar mi asistencia al cumpleaños de 15 💕",
+      rsvpDeadline: "15 de noviembre 2026"
+    };
+
+    var MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto",
+      "septiembre", "octubre", "noviembre", "diciembre"];
+    var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    function byId(id) { return document.getElementById(id); }
+
+    function fill(id, value) {
+      var el = byId(id);
+      el.textContent = value;
+      el.classList.toggle("is-placeholder", /^\[Completar/.test(value));
+    }
+
+    function whatsappUrl(text) {
+      return "https://wa.me/" + CONFIG.rsvpPhone + "?text=" + encodeURIComponent(text);
+    }
+
+    // Guest name: data-guest on per-guest pages, ?n=Marta on real hosting, #Marta in previews.
+    function readGuestName() {
+      var name = "";
+      try {
+        name = document.documentElement.getAttribute("data-guest") || "";
+        if (!name) name = new URLSearchParams(window.location.search).get("n") || "";
+        if (!name && window.location.hash.length > 1) {
+          name = decodeURIComponent(window.location.hash.slice(1)).replace(/[_-]+/g, " ");
+        }
+      } catch (e) {
+        name = "";
+      }
+      return name.trim().slice(0, 40);
+    }
+
+    var guest = readGuestName();
+    if (guest) {
+      var greeting = byId("greeting");
+      greeting.textContent = "Para " + guest;
+      greeting.hidden = false;
+    }
+
+    // Date and time labels come from the single eventStart value; read its digits so the local
+    // time zone of the viewer never shifts the printed date.
+    var parts = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(CONFIG.eventStart);
+    fill("dateLabel", parts[3] + " de " + MONTHS[Number(parts[2]) - 1] + " del " + parts[1]);
+    fill("timeLabel", CONFIG.timeConfirmed ? parts[4] + ":" + parts[5] + " h" : CONFIG.timePlaceholder);
+    fill("venueLabel", CONFIG.venue);
+    fill("dressLabel", CONFIG.dressCode);
+    fill("restrictionsText", CONFIG.restrictions);
+    fill("aliasValue", CONFIG.giftAlias);
+    fill("holderValue", CONFIG.giftHolder);
+    fill("rsvpDeadline", CONFIG.rsvpDeadline);
+    byId("mapLink").href = CONFIG.mapUrl;
+    byId("rsvpLink").href = whatsappUrl(CONFIG.rsvpMessage);
+
+    // Countdown
+    var target = Date.parse(CONFIG.eventStart);
+    var cells = {};
+    document.querySelectorAll("[data-unit]").forEach(function (el) { cells[el.dataset.unit] = el; });
+    var pad = function (n) { return n < 10 ? "0" + n : String(n); };
+    var countdownTimer = 0;
+
+    function tick() {
+      var left = Math.max(0, target - Date.now());
+      var s = Math.floor(left / 1000);
+      cells.days.textContent = pad(Math.floor(s / 86400));
+      cells.hours.textContent = pad(Math.floor((s % 86400) / 3600));
+      cells.minutes.textContent = pad(Math.floor((s % 3600) / 60));
+      cells.seconds.textContent = pad(s % 60);
+      if (left === 0) {
+        byId("countdownTitle").textContent = "¡Llegó el gran día!";
+        return;
+      }
+      countdownTimer = setTimeout(tick, 1000 - (Date.now() % 1000) + 10);
+    }
+    tick();
+
+    // In-page panels: native <dialog> with a fallback for browsers without showModal.
+    var lastTrigger = null;
+    function openDialog(dialog, trigger) {
+      lastTrigger = trigger;
+      if (typeof dialog.showModal === "function") dialog.showModal();
+      else dialog.setAttribute("open", "");
+    }
+    function closeDialog(dialog) {
+      if (typeof dialog.close === "function") dialog.close();
+      else dialog.removeAttribute("open");
+    }
+    document.querySelectorAll("[data-open]").forEach(function (button) {
+      button.addEventListener("click", function () { openDialog(byId(button.dataset.open), button); });
+    });
+    document.querySelectorAll("dialog").forEach(function (dialog) {
+      dialog.addEventListener("click", function (event) {
+        // A click on the dialog itself (not its content) is a click on the backdrop.
+        if (event.target === dialog || event.target.hasAttribute("data-close")) closeDialog(dialog);
+      });
+      dialog.addEventListener("close", function () {
+        byId("copyStatus").textContent = "";
+        if (lastTrigger) lastTrigger.focus({ preventScroll: true });
+      });
+    });
+
+    // Copy alias: clipboard API inside the click handler, falling back to selecting the text.
+    byId("copyAlias").addEventListener("click", function () {
+      var aliasEl = byId("aliasValue");
+      var status = byId("copyStatus");
+      function selectAlias() {
+        var range = document.createRange();
+        range.selectNodeContents(aliasEl);
+        var selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        status.textContent = "No se pudo copiar solo: el alias quedó seleccionado para que lo copies.";
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(aliasEl.textContent).then(function () {
+          status.textContent = "¡Alias copiado!";
+        }, selectAlias);
+      } else {
+        selectAlias();
+      }
+    });
+
+    // Message composer: opens WhatsApp to the RSVP number with the typed text and the guest name.
+    byId("noteForm").addEventListener("submit", function (event) {
+      event.preventDefault();
+      var field = byId("note");
+      var hint = byId("noteHint");
+      var text = field.value.trim();
+      if (!text) {
+        field.setAttribute("aria-invalid", "true");
+        hint.textContent = "Escribí tu mensaje antes de enviarlo.";
+        field.focus();
+        return;
+      }
+      field.removeAttribute("aria-invalid");
+      hint.textContent = "Se envía por WhatsApp.";
+      window.open(whatsappUrl(guest ? text + "\n\n— " + guest : text), "_blank", "noopener");
+    });
+    byId("note").addEventListener("input", function () { this.removeAttribute("aria-invalid"); });
+
+    // Sparkle sky: twinkling points and a few four-point glints on a fixed canvas behind the dark sections.
+    var canvas = byId("sky");
+    var ctx = canvas.getContext && canvas.getContext("2d");
+    if (!ctx) return;
+    var stars = [];
+    var width = 0;
+    var height = 0;
+
+    function seed() {
+      var ratio = Math.min(window.devicePixelRatio || 1, 2);
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = Math.round(width * ratio);
+      canvas.height = Math.round(height * ratio);
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      var count = Math.round(Math.min(120, (width * height) / 6000));
+      stars = [];
+      for (var i = 0; i < count; i++) {
+        stars.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          r: Math.random() * 1.1 + 0.3,
+          glint: Math.random() < 0.12,
+          phase: Math.random() * Math.PI * 2,
+          speed: 0.6 + Math.random() * 1.4
+        });
+      }
+    }
+
+    function draw(time) {
+      ctx.clearRect(0, 0, width, height);
+      var t = time / 1000;
+      stars.forEach(function (star) {
+        var a = reduceMotion ? 0.6 : 0.25 + 0.75 * Math.abs(Math.sin(star.phase + t * star.speed));
+        ctx.globalAlpha = a;
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+        ctx.fill();
+        if (star.glint) {
+          var len = 4 + 6 * a;
+          ctx.strokeStyle = "#ffffff";
+          ctx.lineWidth = 0.8;
+          ctx.beginPath();
+          ctx.moveTo(star.x - len, star.y);
+          ctx.lineTo(star.x + len, star.y);
+          ctx.moveTo(star.x, star.y - len);
+          ctx.lineTo(star.x, star.y + len);
+          ctx.stroke();
+        }
+      });
+      ctx.globalAlpha = 1;
+      if (!reduceMotion) requestAnimationFrame(draw);
+    }
+
+    seed();
+    var resizeTimer = 0;
+    window.addEventListener("resize", function () {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function () {
+        seed();
+        if (reduceMotion) draw(0);
+      }, 150);
+    });
+    if (reduceMotion) draw(0);
+    else requestAnimationFrame(draw);
+  })();
+</script>
+
+</body>
+</html>

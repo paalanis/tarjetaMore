@@ -543,7 +543,7 @@
       <h1 class="card-name">Morena</h1>
       <div class="card-rule" aria-hidden="true"></div>
       <p class="card-text" id="cardText">Te espero para celebrar una noche única.</p>
-      <a class="card-cta" id="cta" href="https://morena0512.my.canva.site/" rel="noopener">VER INVITACIÓN</a>
+      <a class="card-cta" id="cta" href="../invitacion/?n=Marta">VER INVITACIÓN</a>
     </article>
     <button class="replay" id="replay" type="button">Ver el sobre de nuevo</button>
   </section>
@@ -580,6 +580,16 @@
       document.getElementById("to").textContent = "Para " + guest;
       document.getElementById("cardText").textContent =
         guest + ", te espero para celebrar una noche única.";
+      // Carry the name over to the invitation page unless the build already put it in the link.
+      try {
+        var inviteUrl = new URL(cta.getAttribute("href"), window.location.href);
+        if (!inviteUrl.searchParams.get("n")) {
+          inviteUrl.searchParams.set("n", guest);
+          cta.href = inviteUrl.href;
+        }
+      } catch (e) {
+        // Keep the original link if the URL cannot be parsed.
+      }
     }
 
     function showInvite() {
