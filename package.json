@@ -1,0 +1,13 @@
+{
+  "name": "tarjeta-more",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Digital invitation for Morena's XV: envelope pages with link previews, built for GitHub Pages.",
+  "type": "module",
+  "scripts": {
+    "build": "node tools/build-site.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.49.1"
+  }
+}
