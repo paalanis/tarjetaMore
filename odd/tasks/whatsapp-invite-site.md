@@ -34,8 +34,11 @@ so the link preview (whose whole image is tappable) is the chosen entry point.
   generator script, already-understood rendering code). Evidence: `docs/index.html`,
   `docs/marta/index.html`, `docs/og/general.jpg` (39 KB), `docs/og/marta.jpg` (34 KB); both images were
   reviewed visually.
-- [ ] T3 Create the public GitHub repository, push, enable Pages from `docs/`, and check that the pages
-  and images return HTTP 200. Route: inline (git/gh state commands).
+- [x] T3 Create the public GitHub repository, push, enable Pages from `docs/`, and check that the pages
+  and images return HTTP 200. Route: inline (git/gh state commands). Evidence: commit `69b698b` pushed
+  to `feat/whatsapp-invite-site`; `curl` returns 200 for both pages and both JPEGs (34 KB and 39 KB).
+  Native review: medium risk, granted, approved with no blocking findings, acknowledged. Advisory
+  follow-ups: fill in `HOST_PHONE`, move the site generator into the repo.
 - [ ] T4 Pablo tests the flow from his phone. Pending on Pablo.
 
 ## Acceptance criteria
@@ -46,8 +49,9 @@ so the link preview (whose whole image is tappable) is the chosen entry point.
 
 ## Progress
 
-- T1 and T2 done and committed on `feat/whatsapp-invite-site`.
+- T1, T2 and T3 done. Site live at https://paalanis.github.io/tarjetaMore/ and
+  https://paalanis.github.io/tarjetaMore/marta/.
 
 ## Next step
 
-- T3.
+- T4: Pablo sends both links to himself on WhatsApp and checks the preview and the flow.
