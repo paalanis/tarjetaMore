@@ -54,7 +54,12 @@ and gold) also does not match the invitation's black-and-silver disco style, whi
   Route: delegated writer. Evidence: `82a7e0c`. A Playwright smoke test at 390px found no console
   errors and no overflow; the countdown ticks and the panels open and close. The parent checked the
   full-page screenshot, and a parent rebuild left `docs/` unchanged. Fonts: Cinzel, Great Vibes, Montserrat.
-- [ ] T4 Publish (push) and check HTTP 200 for every page and image. Route: inline (git/curl).
+- [x] T4 Publish (push) and check HTTP 200 for every page and image. Route: inline (git/curl). Evidence:
+  pushed `0daf4c7`; 200 for `/`, `/marta/`, `/invitacion/` and both og JPGs; Marta's CTA is
+  `../invitacion/?n=Marta`. Native review: medium, granted, approved, acknowledged. Advisory follow-ups:
+  validate empty or colliding guest slugs, delete the og render wrapper in a `finally` block, derive the
+  og description from CONFIG, add a small build test, and switch to the final RSVP number and confirmed
+  time before the real send.
 - [ ] T5 Pablo provides the missing data: event time, dress-code restrictions and transfer alias. Pending
   on Pablo. Resolved: the RSVP number 5492615133030 belongs to Morena's mother and is the final one;
   Pablo's 5492613829997 is used while testing.
@@ -75,4 +80,5 @@ and gold) also does not match the invitation's black-and-silver disco style, whi
 
 ## Next step
 
-- T4: native review, then push and run the 200 checks.
+- T5: collect the time, restrictions and alias from Pablo. Then handle the advisory follow-ups before
+  generating the real guest pages from the Excel file.
