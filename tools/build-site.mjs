@@ -81,13 +81,13 @@ const previewCss = `
   .og-button {
     padding: 20px 48px;
     border-radius: 2px;
-    background: var(--gold);
-    color: var(--wine);
+    background: var(--paper);
+    color: var(--ink);
     font-family: var(--font-caps);
     font-weight: 600;
     font-size: 30px;
     letter-spacing: 0.22em;
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--silver-deep);
   }
 `;
 

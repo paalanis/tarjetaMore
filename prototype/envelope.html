@@ -2,22 +2,30 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Pinyon+Script&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Great+Vibes&display=swap">
 <style>
   /* Layout: one centered stage; the sealed envelope and the revealed card share the same grid cell. */
+  /* Palette: black and silver disco, with the gold crown as the single warm accent. */
   :root {
-    --velvet: #2a0b17;
-    --velvet-glow: #5a1b30;
-    --paper: #f4e2de;
-    --paper-shade: #e6c6c1;
-    --paper-inside: #b98581;
-    --paper-dim: rgba(244, 226, 222, 0.72);
-    --wax: #7a1430;
-    --wine: #5e1026;
-    --gold: #dcb878;
-    --gold-deep: #8c6629;
-    --sheen: rgba(255, 255, 255, 0.32);
-    --font-script: "Pinyon Script", "Snell Roundhand", "Apple Chancery", cursive;
+    --night: #060608;
+    --night-glow: #24242c;
+    --paper: #eeedf1;
+    --paper-shade: #d0cfd7;
+    --paper-inside: #8d8c96;
+    --paper-dim: rgba(238, 237, 241, 0.7);
+    --card: #0b0b0e;
+    --card-edge: #34343c;
+    --ink: #111115;
+    --silver: #dcdde3;
+    --silver-deep: #9b9da8;
+    --wax: #161619;
+    --wax-light: #4a4a53;
+    --wax-deep: #000000;
+    --gold: #dcb86a;
+    --sheen: rgba(255, 255, 255, 0.5);
+    --bokeh: rgba(255, 255, 255, 0.07);
+    --sparkle: #ffffff;
+    --font-script: "Great Vibes", "Snell Roundhand", "Apple Chancery", cursive;
     --font-caps: "Cinzel", "Trajan Pro", Georgia, serif;
     --font-body: "Cormorant Garamond", "EB Garamond", Georgia, serif;
     --grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .07 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
@@ -27,8 +35,8 @@
   html, body { height: 100%; }
 
   body {
-    background-color: var(--velvet);
-    background-image: radial-gradient(120% 80% at 50% 32%, var(--velvet-glow), var(--velvet) 66%);
+    background-color: var(--night);
+    background-image: radial-gradient(120% 80% at 50% 32%, var(--night-glow), var(--night) 66%);
     color: var(--paper);
     font-family: var(--font-body);
     padding-block: 24px;
@@ -36,6 +44,48 @@
     padding-right: max(16px, env(safe-area-inset-right, 0px));
     box-sizing: border-box;
     overflow-x: hidden;
+  }
+
+  /* Disco atmosphere: soft bokeh discs plus a few twinkling glints. The 5.2s twinkle matches the sheen cycle. */
+  .sparkles {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+    background-image:
+      radial-gradient(circle 46px at 9% 16%, var(--bokeh), transparent),
+      radial-gradient(circle 30px at 86% 11%, var(--bokeh), transparent),
+      radial-gradient(circle 64px at 94% 46%, var(--bokeh), transparent),
+      radial-gradient(circle 38px at 6% 62%, var(--bokeh), transparent),
+      radial-gradient(circle 52px at 22% 92%, var(--bokeh), transparent),
+      radial-gradient(circle 34px at 74% 86%, var(--bokeh), transparent),
+      radial-gradient(circle 22px at 58% 6%, var(--bokeh), transparent);
+  }
+
+  .sparkles i {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: 16px;
+    height: 16px;
+    background:
+      radial-gradient(circle, var(--sparkle) 0 1.5px, transparent 3px),
+      linear-gradient(90deg, transparent 46%, var(--sparkle) 50%, transparent 54%),
+      linear-gradient(0deg, transparent 46%, var(--sparkle) 50%, transparent 54%);
+    opacity: 0.2;
+    animation: twinkle 5.2s ease-in-out var(--d, 0s) infinite;
+  }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.15; transform: scale(var(--s, 1)) scale(0.55); }
+    50% { opacity: 0.95; transform: scale(var(--s, 1)) rotate(45deg); }
+  }
+
+  .crown {
+    display: block;
+    color: var(--gold);
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
   }
 
   .stage {
@@ -65,7 +115,8 @@
     font-family: var(--font-script);
     font-size: clamp(2rem, 8vw, 2.6rem);
     line-height: 1.1;
-    color: var(--gold);
+    word-spacing: 0.14em;
+    color: var(--silver);
     text-align: center;
     text-wrap: balance;
     transition: opacity 0.4s ease;
@@ -89,12 +140,12 @@
     background: none;
     cursor: pointer;
     perspective: 1000px;
-    filter: drop-shadow(0 18px 28px rgba(0, 0, 0, 0.45));
+    filter: drop-shadow(0 18px 28px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 24px rgba(220, 221, 227, 0.08));
     -webkit-tap-highlight-color: transparent;
   }
 
   .envelope:focus-visible {
-    outline: 2px solid var(--gold);
+    outline: 2px solid var(--silver);
     outline-offset: 10px;
     border-radius: 8px;
   }
@@ -117,25 +168,30 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding-top: 9%;
+    padding-top: 6%;
     border-radius: 3px;
-    background: var(--grain), var(--paper);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+    background: var(--card);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), inset 0 0 0 1px var(--card-edge);
     transition: transform 0.85s cubic-bezier(0.3, 0.7, 0.2, 1) 0.7s;
+  }
+
+  .letter .crown {
+    width: 30px;
+    margin-bottom: 4px;
   }
 
   .letter-eyebrow {
     font-family: var(--font-caps);
     font-size: 0.7rem;
     letter-spacing: 0.35em;
-    color: var(--gold-deep);
+    color: var(--silver-deep);
   }
 
   .letter-name {
     font-family: var(--font-script);
     font-size: 2.6rem;
     line-height: 1.2;
-    color: var(--wine);
+    color: var(--silver);
   }
 
   .pocket {
@@ -178,14 +234,17 @@
     z-index: 5;
     width: 22%;
     aspect-ratio: 1;
-    display: grid;
-    place-items: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
     transform: translate(-50%, -50%);
     font-family: var(--font-caps);
     font-weight: 600;
     font-size: clamp(1.4rem, 6vw, 1.9rem);
-    color: var(--gold);
-    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.45);
+    color: var(--silver);
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.8), 0 1px 0 rgba(255, 255, 255, 0.12);
     animation: breathe 2.6s ease-in-out infinite;
     transition: opacity 0.35s ease, transform 0.35s ease;
   }
@@ -196,11 +255,16 @@
     inset: -6%;
     z-index: -1;
     border-radius: 48% 52% 50% 50% / 53% 47% 53% 47%;
-    background: radial-gradient(circle at 35% 30%, #a3304f, var(--wax) 55%, #4a0a1b);
+    background: radial-gradient(circle at 35% 30%, var(--wax-light), var(--wax) 55%, var(--wax-deep));
     box-shadow:
-      0 3px 6px rgba(0, 0, 0, 0.35),
-      inset 0 0 0 5px rgba(0, 0, 0, 0.12),
-      inset 0 0 0 8px rgba(255, 255, 255, 0.05);
+      0 3px 8px rgba(0, 0, 0, 0.45),
+      inset 0 0 0 5px rgba(0, 0, 0, 0.35),
+      inset 0 0 0 6px rgba(220, 221, 227, 0.22);
+  }
+
+  .seal .crown {
+    width: 0.72em;
+    margin: -0.18em 0 0.08em;
   }
 
   @keyframes breathe {
@@ -293,20 +357,25 @@
     gap: 0.75rem;
     padding: 2.75rem 1.75rem 2.5rem;
     border-radius: 4px;
-    background: var(--grain), var(--paper);
-    color: var(--wine);
+    background: var(--card);
+    color: var(--paper);
     text-align: center;
-    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--card-edge);
   }
 
   .card::before {
     content: "";
     position: absolute;
     inset: 10px;
-    border: 1px solid var(--gold-deep);
+    border: 1px solid var(--silver-deep);
     border-radius: 2px;
     opacity: 0.55;
     pointer-events: none;
+  }
+
+  .card .crown {
+    width: 46px;
+    margin-bottom: -0.35rem;
   }
 
   .card-eyebrow {
@@ -314,7 +383,7 @@
     font-family: var(--font-caps);
     font-size: 0.8rem;
     letter-spacing: 0.4em;
-    color: var(--gold-deep);
+    color: var(--silver-deep);
   }
 
   .card-name {
@@ -329,7 +398,7 @@
     position: relative;
     width: 60%;
     height: 1px;
-    background: linear-gradient(90deg, transparent, var(--gold-deep), transparent);
+    background: linear-gradient(90deg, transparent, var(--silver-deep), transparent);
   }
 
   .card-rule::after {
@@ -339,7 +408,7 @@
     top: 50%;
     width: 7px;
     height: 7px;
-    background: var(--gold-deep);
+    background: var(--silver);
     transform: translate(-50%, -50%) rotate(45deg);
   }
 
@@ -355,19 +424,20 @@
     display: inline-block;
     padding: 0.95rem 1.8rem;
     border-radius: 2px;
-    background: var(--wine);
-    color: var(--paper);
+    background: var(--paper);
+    color: var(--ink);
     font-family: var(--font-caps);
+    font-weight: 600;
     font-size: 0.82rem;
     letter-spacing: 0.22em;
     text-decoration: none;
     transition: background-color 0.2s ease, transform 0.2s ease;
   }
 
-  .card-cta:hover { background: var(--wax); transform: translateY(-1px); }
+  .card-cta:hover { background: #ffffff; transform: translateY(-1px); }
 
   .card-cta:focus-visible {
-    outline: 2px solid var(--gold-deep);
+    outline: 2px solid var(--silver);
     outline-offset: 4px;
   }
 
@@ -388,7 +458,7 @@
   .replay:hover { color: var(--paper); }
 
   .replay:focus-visible {
-    outline: 2px solid var(--gold);
+    outline: 2px solid var(--silver);
     outline-offset: 2px;
     border-radius: 2px;
   }
@@ -398,7 +468,9 @@
 
   @media (prefers-reduced-motion: reduce) {
     .seal,
-    .sheen::before { animation: none; }
+    .sheen::before,
+    .sparkles i { animation: none; }
+    .sparkles i { opacity: 0.5; }
     .stage,
     .stage * {
       transition-duration: 0.01s !important;
@@ -407,18 +479,42 @@
   }
 </style>
 
+<svg width="0" height="0" style="position: absolute" aria-hidden="true" focusable="false">
+  <symbol id="crown" viewBox="0 0 64 40">
+    <path d="M9 31 L4 13 L16 23 L22 8 L27 19 L32 3 L37 19 L42 8 L48 23 L60 13 L55 31 Z"
+      fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M9 35.5 H55" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+    <g fill="currentColor">
+      <circle cx="4" cy="12" r="2.2"/><circle cx="22" cy="7" r="2.2"/><circle cx="32" cy="2.4" r="2.4"/>
+      <circle cx="42" cy="7" r="2.2"/><circle cx="60" cy="12" r="2.2"/>
+      <path d="M32 22 L35 26 L32 30 L29 26 Z"/>
+    </g>
+  </symbol>
+</svg>
+
+<div class="sparkles" aria-hidden="true">
+  <i style="--x: 12%; --y: 9%; --d: -0.4s; --s: 1"></i>
+  <i style="--x: 82%; --y: 17%; --d: -2.1s; --s: 0.8"></i>
+  <i style="--x: 91%; --y: 64%; --d: -3.5s; --s: 1.2"></i>
+  <i style="--x: 7%; --y: 44%; --d: -1.2s; --s: 0.7"></i>
+  <i style="--x: 30%; --y: 80%; --d: -4.4s; --s: 0.9"></i>
+  <i style="--x: 66%; --y: 93%; --d: -2.8s; --s: 0.7"></i>
+  <i style="--x: 50%; --y: 3%; --d: -1.7s; --s: 0.6"></i>
+</div>
+
 <main class="stage" id="stage">
   <section class="scene scene--envelope" id="envelopeScene">
     <p class="to" id="to">Una invitación especial</p>
     <button class="envelope" id="envelope" type="button" aria-label="Abrir el sobre">
       <span class="env-back" aria-hidden="true"></span>
       <span class="letter" aria-hidden="true">
+        <svg class="crown" viewBox="0 0 64 40"><use href="#crown"/></svg>
         <span class="letter-eyebrow">MIS XV</span>
         <span class="letter-name">Morena</span>
       </span>
       <span class="pocket" aria-hidden="true"></span>
       <span class="flap" aria-hidden="true"></span>
-      <span class="seal" aria-hidden="true">M</span>
+      <span class="seal" aria-hidden="true"><svg class="crown" viewBox="0 0 64 40"><use href="#crown"/></svg><span>M</span></span>
       <span class="sheen" aria-hidden="true"></span>
     </button>
     <p class="hint">Tocar el sobre para abrirlo</p>
@@ -426,6 +522,7 @@
 
   <section class="scene scene--invite" id="inviteScene" inert>
     <article class="card">
+      <svg class="crown" viewBox="0 0 64 40" aria-hidden="true" focusable="false"><use href="#crown"/></svg>
       <p class="card-eyebrow">MIS XV</p>
       <h1 class="card-name">Morena</h1>
       <div class="card-rule" aria-hidden="true"></div>
