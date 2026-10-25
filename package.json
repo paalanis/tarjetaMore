@@ -5,7 +5,8 @@
   "description": "Digital invitation for Morena's XV: envelope pages with link previews, built for GitHub Pages.",
   "type": "module",
   "scripts": {
-    "build": "node tools/build-site.mjs"
+    "build": "node tools/build-site.mjs",
+    "build:sheet": "node tools/build-site.mjs --sheet"
   },
   "devDependencies": {
     "playwright": "1.49.1"

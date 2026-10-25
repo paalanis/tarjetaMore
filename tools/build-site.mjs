@@ -8,12 +8,21 @@
 // read it. invitacion/ is still built but no page links to it any more.
 //
 // Usage: npm run build
-//    or: node tools/build-site.mjs [envelope.html] [docs-dir] [base-url] ["Guest One,Guest Two"]
+//    or: npm run build:sheet
+//    or: node tools/build-site.mjs [--sheet] [envelope.html] [docs-dir] [base-url] ["Guest One,Guest Two"]
 //
 // Every argument is optional. Defaults: prototype/envelope.html, docs/, the GitHub Pages URL, and the
 // guest list in tools/guests.json. The other sources are always prototype/invitation.html,
 // prototype/restrictions.html, prototype/transfer.html and prototype/confirm.html. Real guest data must never be committed; pass
 // it as the fourth argument or keep a local, git-ignored list instead.
+//
+// Sheet mode (--sheet, used by build:sheet) takes the guests from the Google Sheet instead: it fetches
+// <rsvpEndpoint>?action=list, where rsvpEndpoint is read from the CONFIG in prototype/confirm.html so the
+// URL lives in one place, and builds one page per row with the sheet `id` as the slug (used as is) and
+// `nombre` as the displayed name. Any error from the script (such as duplicate_id) or the network stops
+// the build before a page is written. The RSVP_ENDPOINT environment variable overrides the URL, which is
+// how sheet mode is tested against a local mock server. Neither mode deletes pages: a family removed from
+// the sheet keeps a stale docs/<slug>/ until it is deleted by hand.
 import { chromium } from "playwright";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -32,15 +41,74 @@ const defaults = {
   canvaInvitation: "https://more-0512.my.canva.site/",
 };
 
-const [, , sourceArg, docsArg, baseArg, guestsArg] = process.argv;
+const args = process.argv.slice(2);
+const sheetMode = args.includes("--sheet");
+const [sourceArg, docsArg, baseArg, guestsArg] = args.filter((a) => a !== "--sheet");
 const sourcePath = resolve(sourceArg || defaults.source);
 const docs = resolve(docsArg || defaults.docs);
 const baseRaw = baseArg || defaults.base;
 const base = baseRaw.endsWith("/") ? baseRaw : `${baseRaw}/`;
-const guests = (guestsArg !== undefined
-  ? guestsArg.split(",")
-  : JSON.parse(readFileSync(defaults.guestsFile, "utf8"))
-).map((g) => String(g).trim()).filter(Boolean);
+
+const slugify = (s) =>
+  s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+const fail = (message) => {
+  console.error(`build-site: ${message}`);
+  process.exit(1);
+};
+
+// Folders the build writes itself, which a guest slug must not take over.
+const reservedDirs = new Set(["og", "invitacion", "restricciones", "transferencia", "confirmar"]);
+
+// Fetches the guest list from the Apps Script (see tools/rsvp/Code.gs) as {name, slug} pairs.
+async function sheetGuests() {
+  let endpoint = process.env.RSVP_ENDPOINT;
+  if (!endpoint) {
+    const config = readFileSync(defaults.confirm, "utf8").match(/rsvpEndpoint:s*"([^"]*)"/);
+    endpoint = config ? config[1] : "";
+  }
+  if (!endpoint) fail(`no rsvpEndpoint found in the CONFIG of ${defaults.confirm}`);
+  const url = new URL(endpoint);
+  url.searchParams.set("action", "list");
+
+  let data;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    data = await response.json();
+  } catch (err) {
+    fail(`could not read the guest list from ${url}: ${err.cause?.message || err.message}`);
+  }
+  if (!data || data.ok !== true) {
+    const error = data?.error || "unknown_error";
+    const detail = error === "duplicate_id" ? `; repeated ids: ${(data.ids || []).join(", ")}`
+      : error === "empty_id" ? `; sheet rows: ${(data.rows || []).join(", ")}`
+      : "";
+    fail(`the sheet returned ${error}${detail}. Fix the sheet and build again.`);
+  }
+  if (!Array.isArray(data.guests)) fail("the sheet response has no guests list");
+
+  // The script already checks these; checking again keeps a bad response from writing odd folders.
+  const seen = new Set();
+  return data.guests.map(({ id, name }) => {
+    const slug = String(id ?? "").trim();
+    const guest = String(name ?? "").trim();
+    if (!guest) fail(`guest "${slug}" has no name`);
+    if (!/^[a-z0-9][a-z0-9_-]*$/i.test(slug)) fail(`guest "${guest}" has an id unusable as a folder: "${slug}"`);
+    if (reservedDirs.has(slug.toLowerCase())) fail(`guest "${guest}" uses the reserved id "${slug}"`);
+    if (seen.has(slug.toLowerCase())) fail(`the id "${slug}" is used by more than one guest`);
+    seen.add(slug.toLowerCase());
+    return { name: guest, slug };
+  });
+}
+
+// Guests as {name, slug} pairs: from the sheet, the fourth argument, or tools/guests.json.
+const guests = sheetMode
+  ? await sheetGuests()
+  : (guestsArg !== undefined
+    ? guestsArg.split(",")
+    : JSON.parse(readFileSync(defaults.guestsFile, "utf8"))
+  ).map((g) => String(g).trim()).filter(Boolean).map((name) => ({ name, slug: slugify(name) }));
 
 // The prototypes are authored for the artifact viewer; drop their title and viewer-only meta.
 const artifactBody = (path) =>
@@ -58,9 +126,6 @@ const withInviteLink = (html, href) => html.replace(ctaHref, `$1${href}$2`);
 
 const escapeHtml = (s) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-
-const slugify = (s) =>
-  s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
 function pageHtml({ guest = "", guestId = "", title, description, pageUrl, imageUrl, content }) {
   const guestAttr = (guest ? ` data-guest="${escapeHtml(guest)}"` : "") +
@@ -136,7 +201,7 @@ async function renderPreview(guest, file) {
 }
 
 try {
-  const entries = [{ guest: "", slug: "" }, ...guests.map((guest) => ({ guest, slug: slugify(guest) }))];
+  const entries = [{ guest: "", slug: "" }, ...guests.map(({ name, slug }) => ({ guest: name, slug }))];
   for (const { guest, slug } of entries) {
     const imageName = `${slug || "general"}.jpg`;
     await renderPreview(guest, join(docs, "og", imageName));
