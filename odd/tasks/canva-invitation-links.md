@@ -73,6 +73,9 @@ to another page of the design, so they cannot open a panel or copy the alias. Ho
 - Restrictions content set by Pablo: "Dress code" / "No utilizar color" / "Rosa, Plateado, Lila y Champagne",
   with four crossed-out color dots; "Formal - Elegante" removed from this page (it stays in the Canva section).
   Checked at 360 and 430px: no console errors, no horizontal scroll; parent checked the screenshot.
+- Pablo asked to drop the crown and the "Mis XV · Morena" script title from both pages; removed with their
+  CSS, the crown symbol and the Great Vibes font. Checked at 360 and 430px: no console errors, no horizontal
+  scroll; parent checked both screenshots.
 - Still placeholders: alias and account holder.
 
 ## Next step

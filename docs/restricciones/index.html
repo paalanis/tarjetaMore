@@ -18,10 +18,10 @@
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Great+Vibes&family=Montserrat:wght@200;400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Montserrat:wght@200;400;500;600&display=swap">
 <style>
   /* Info page linked from the Canva invitation's "VER RESTRICCIONES" button. Same palette and type as
-     invitation.html: black and silver disco, with the gold crown as the single warm accent. */
+     invitation.html: black and silver disco. */
   :root {
     --night: #050507;
     --night-glow: #22222a;
@@ -31,10 +31,8 @@
     --silver: #dcdde3;
     --silver-deep: #9b9da8;
     --white: #ffffff;
-    --gold: #dcb86a;
     --placeholder: #e8c46a;
     --font-display: "Cinzel", "Trajan Pro", Georgia, serif;
-    --font-script: "Great Vibes", "Snell Roundhand", "Apple Chancery", cursive;
     --font-body: "Montserrat", "Helvetica Neue", Arial, sans-serif;
     color-scheme: dark;
   }
@@ -71,28 +69,6 @@
     gap: 22px;
     padding: 56px max(16px, env(safe-area-inset-right, 0px)) 56px max(16px, env(safe-area-inset-left, 0px));
     text-align: center;
-  }
-
-  .masthead {
-    display: grid;
-    justify-items: center;
-    gap: 2px;
-  }
-
-  .crown {
-    display: block;
-    width: 76px;
-    color: var(--gold);
-    filter: drop-shadow(0 2px 6px rgba(220, 184, 106, 0.35));
-  }
-
-  .script {
-    margin: 0;
-    font-family: var(--font-script);
-    font-weight: 400;
-    font-size: clamp(2.1rem, 10vw, 2.8rem);
-    line-height: 1.1;
-    color: var(--silver);
   }
 
   .panel {
@@ -229,27 +205,9 @@
   }
 </style>
 
-<svg width="0" height="0" style="position: absolute" aria-hidden="true" focusable="false">
-  <symbol id="crown" viewBox="0 0 64 40">
-    <path d="M9 31 L4 13 L16 23 L22 8 L27 19 L32 3 L37 19 L42 8 L48 23 L60 13 L55 31 Z"
-      fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-    <path d="M9 35.5 H55" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-    <g fill="currentColor">
-      <circle cx="4" cy="12" r="2.2"/><circle cx="22" cy="7" r="2.2"/><circle cx="32" cy="2.4" r="2.4"/>
-      <circle cx="42" cy="7" r="2.2"/><circle cx="60" cy="12" r="2.2"/>
-      <path d="M32 22 L35 26 L32 30 L29 26 Z"/>
-    </g>
-  </symbol>
-</svg>
-
 <canvas class="sky" id="sky" aria-hidden="true"></canvas>
 
 <main class="page">
-  <header class="masthead">
-    <svg class="crown" viewBox="0 0 64 40" aria-hidden="true" focusable="false"><use href="#crown"/></svg>
-    <p class="script">Mis XV · Morena</p>
-  </header>
-
   <section class="panel" aria-labelledby="pageTitle">
     <svg class="icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
       <path d="M10 22l6-8h16l6 8-14 20z"/>
