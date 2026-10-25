@@ -42,7 +42,7 @@ small Apps Script web app reads and writes.
   `docs/`. Route: delegated writer (writer trigger: 3+ non-trivial files). Commit `a628291`.
 - [x] T3 Pablo deploys the Apps Script and sends the web app URL; set it in the confirm page CONFIG,
   publish, and run an end-to-end check against the sheet. Route: inline. Commit `f77ad0c`, pushed.
-- [ ] T4 Pablo links the Canva "Confirmar" button to `https://paalanis.github.io/tarjetaMore/confirmar/`.
+- [x] T4 Pablo links the Canva "Confirmar" button to `https://paalanis.github.io/tarjetaMore/confirmar/`.
 - [x] T5 Build the guest envelopes from the sheet (Pablo asked so he only edits the sheet). `Code.gs` gets a
   `doGet?action=list` that returns only `{id, name}` per row (names are already public through the built
   guest pages), fills an empty `id` from `nombre` with the same slugify as the build, and matches lookups on
@@ -107,7 +107,7 @@ small Apps Script web app reads and writes.
 - T6 done: after Pablo published the new version, `?action=list` returned 6 families with only id and name.
   Pablo had typed 1-6 in `id`; on the parent's advice he cleared them so the script filled name slugs.
   `npm run build:sheet` first failed: the endpoint regex in `tools/build-site.mjs` had lost its backslash
-  (`s*` for `s*`), missed by T5 tests that used `RSVP_ENDPOINT`; fixed in `fe0c839`. `tools/guests.json`
+  (`s*` for `\s*`), missed by T5 tests that used `RSVP_ENDPOINT`; fixed in `fe0c839`. `tools/guests.json`
   is now `[]` and `marta/` plus its og image were removed (Pablo agreed). Built and published 6 envelopes
   (`1852df4`); all six return 200, `/marta/` 404, og images 200; the og image for marcos-sebastianelli reads
   "Para Marcos Sebastianelli". Live: `/julieta-gil/` stores its id, then `/confirmar/` shows "Hola, Julieta
@@ -126,9 +126,17 @@ small Apps Script web app reads and writes.
   a null row in the list throws a TypeError instead of a clean message; the closed-port test can flake and
   one assert runs inside a server handler.
 
+- Pablo redeployed `tools/rsvp/Code.gs` (T7); live list returns the 6 lowercase ids and `?id=PABLO-ALANIS`
+  finds the row.
+- Pablo linked the Canva "Confirmar" button (T4) and ran the full phone flow (WhatsApp, envelope, Canva,
+  Confirmar); the sheet read back `confirmed: 3` for `pablo-alanis`. WhatsApp previews were missing on his
+  phone because of WhatsApp's own link preview setting (not even google.com showed one); fixed on his side.
+
 ## Next step
 
-- Pablo redeployed `tools/rsvp/Code.gs` (T7); live list returns the 6 lowercase ids and `?id=PABLO-ALANIS` finds the row.
-- T4: Pablo links the Canva "Confirmar" button to `https://paalanis.github.io/tarjetaMore/confirmar/`.
-- Before sending: test on a real phone through WhatsApp (in-app browser storage), and rerun
-  `npm run build:sheet` after any change to the families in the sheet.
+- Pablo clears his test answer (`pablo-alanis`, `Confirmado = 3`) before sending.
+- Bulk send (new feature, not started): parent recommended a semi-automatic "Enviar" column in the sheet
+  with a per-family `wa.me` link (prefilled message with the family's envelope link; Pablo taps send), tested
+  first on `pablo-alanis` and `romina-gonzalez`. The fully automatic WhatsApp Web route was described with
+  its ban risk. Pablo has not chosen yet; the message text is also pending.
+- Rerun `npm run build:sheet` after any change to the families in the sheet.
