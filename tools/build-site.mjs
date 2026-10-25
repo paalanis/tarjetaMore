@@ -1,14 +1,17 @@
 // Builds the static invitation site: a general envelope page plus one per guest, each with its own
 // Open Graph preview image so WhatsApp shows the sealed envelope (with the guest's name when present),
-// and the invitation page at invitacion/. Every envelope's "VER INVITACIÓN" link is rewritten to a
-// relative URL (carrying ?n=<guest> on guest pages), so the site works under any base URL.
+// the invitation page at invitacion/, and the two info pages the Canva invitation's buttons link to:
+// restricciones/ (dress code restrictions) and transferencia/ (gift alias with a copy button). Every
+// envelope's "VER INVITACIÓN" link is rewritten to a relative URL (carrying ?n=<guest> on guest pages),
+// so the site works under any base URL.
 //
 // Usage: npm run build
 //    or: node tools/build-site.mjs [envelope.html] [docs-dir] [base-url] ["Guest One,Guest Two"]
 //
 // Every argument is optional. Defaults: prototype/envelope.html, docs/, the GitHub Pages URL, and the
-// guest list in tools/guests.json. The invitation source is always prototype/invitation.html. Real guest data must never be committed; pass it as the fourth
-// argument or keep a local, git-ignored list instead.
+// guest list in tools/guests.json. The other sources are always prototype/invitation.html,
+// prototype/restrictions.html and prototype/transfer.html. Real guest data must never be committed; pass
+// it as the fourth argument or keep a local, git-ignored list instead.
 import { chromium } from "playwright";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -18,6 +21,8 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const defaults = {
   source: join(root, "prototype", "envelope.html"),
   invitation: join(root, "prototype", "invitation.html"),
+  restrictions: join(root, "prototype", "restrictions.html"),
+  transfer: join(root, "prototype", "transfer.html"),
   docs: join(root, "docs"),
   base: "https://paalanis.github.io/tarjetaMore/",
   guestsFile: join(root, "tools", "guests.json"),
@@ -156,6 +161,34 @@ try {
     content: invitationBody,
   }));
   console.log(invitationUrl);
+
+  // Info pages for the Canva invitation's buttons, which can only open a URL.
+  const infoPages = [
+    {
+      dir: "restricciones",
+      source: defaults.restrictions,
+      title: "Dress code · Mis XV de Morena",
+      description: "Dress code Formal - Elegante y sus restricciones para la fiesta de Morena.",
+    },
+    {
+      dir: "transferencia",
+      source: defaults.transfer,
+      title: "Regalo · Mis XV de Morena",
+      description: "Datos para transferencia: alias y titular de la cuenta, con un botón para copiar el alias.",
+    },
+  ];
+  for (const { dir, source, title, description } of infoPages) {
+    const pageUrl = `${base}${dir}/`;
+    mkdirSync(join(docs, dir), { recursive: true });
+    writeFileSync(join(docs, dir, "index.html"), pageHtml({
+      title,
+      description,
+      pageUrl,
+      imageUrl: `${base}og/general.jpg`,
+      content: artifactBody(source),
+    }));
+    console.log(pageUrl);
+  }
 } finally {
   await browser.close();
   rmSync(ogWrapper, { force: true });

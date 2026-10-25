@@ -1,0 +1,315 @@
+<title>Restricciones del dress code</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Great+Vibes&family=Montserrat:wght@200;400;500;600&display=swap">
+<style>
+  /* Info page linked from the Canva invitation's "VER RESTRICCIONES" button. Same palette and type as
+     invitation.html: black and silver disco, with the gold crown as the single warm accent. */
+  :root {
+    --night: #050507;
+    --night-glow: #22222a;
+    --panel: #000000;
+    --panel-edge: rgba(255, 255, 255, 0.07);
+    --ink: #111115;
+    --silver: #dcdde3;
+    --silver-deep: #9b9da8;
+    --white: #ffffff;
+    --gold: #dcb86a;
+    --placeholder: #e8c46a;
+    --font-display: "Cinzel", "Trajan Pro", Georgia, serif;
+    --font-script: "Great Vibes", "Snell Roundhand", "Apple Chancery", cursive;
+    --font-body: "Montserrat", "Helvetica Neue", Arial, sans-serif;
+    color-scheme: dark;
+  }
+
+  body {
+    margin: 0;
+    background:
+      radial-gradient(70% 45% at 50% 70%, rgba(255, 255, 255, 0.05), transparent),
+      radial-gradient(120% 70% at 50% 0%, var(--night-glow), var(--night) 70%) fixed;
+    background-color: var(--night);
+    color: var(--white);
+    font-family: var(--font-body);
+    font-weight: 500;
+    line-height: 1.4;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .sky {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .page {
+    box-sizing: border-box;
+    min-height: 100svh;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 22px;
+    padding: 56px max(16px, env(safe-area-inset-right, 0px)) 56px max(16px, env(safe-area-inset-left, 0px));
+    text-align: center;
+  }
+
+  .masthead {
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+  }
+
+  .crown {
+    display: block;
+    width: 76px;
+    color: var(--gold);
+    filter: drop-shadow(0 2px 6px rgba(220, 184, 106, 0.35));
+  }
+
+  .script {
+    margin: 0;
+    font-family: var(--font-script);
+    font-weight: 400;
+    font-size: clamp(2.1rem, 10vw, 2.8rem);
+    line-height: 1.1;
+    color: var(--silver);
+  }
+
+  .panel {
+    box-sizing: border-box;
+    width: min(100%, 380px);
+    display: grid;
+    justify-items: center;
+    gap: 16px;
+    padding: 40px 22px 34px;
+    background: var(--panel);
+    box-shadow: 0 0 0 1px var(--panel-edge), 0 20px 40px rgba(0, 0, 0, 0.5);
+  }
+
+  .icon {
+    width: 52px;
+    height: 52px;
+    color: var(--white);
+  }
+
+  .heading {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(1.6rem, 7.4vw, 2.1rem);
+    letter-spacing: 0.12em;
+    /* Letter spacing trails after the last glyph; pull it back so the word stays centered. */
+    margin-right: -0.12em;
+    line-height: 1.2;
+  }
+
+  .lead {
+    margin: 0;
+    font-size: clamp(1.15rem, 5.2vw, 1.35rem);
+    font-weight: 600;
+    line-height: 1.35;
+    text-wrap: balance;
+  }
+
+  .rule {
+    width: 56px;
+    height: 1px;
+    margin: 4px 0;
+    border: 0;
+    background: var(--silver-deep);
+  }
+
+  .label {
+    margin: 0;
+    font-size: 0.75rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--silver-deep);
+  }
+
+  .body-text {
+    margin: 0;
+    max-width: 32ch;
+    font-size: clamp(1rem, 4.6vw, 1.15rem);
+    font-weight: 400;
+    line-height: 1.55;
+    text-wrap: pretty;
+    overflow-wrap: anywhere;
+  }
+
+  .is-placeholder {
+    padding: 0 0.3em;
+    border: 1px dashed var(--placeholder);
+    border-radius: 3px;
+    color: var(--placeholder);
+    font-style: italic;
+    font-weight: 500;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    box-sizing: border-box;
+    padding: 0.7rem 1.5rem;
+    border: 1px solid var(--white);
+    border-radius: 0;
+    background: var(--white);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 0.78rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .btn:hover { background: transparent; color: var(--white); }
+
+  .btn:focus-visible {
+    outline: 2px solid var(--silver);
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .btn { transition: none; }
+  }
+</style>
+
+<svg width="0" height="0" style="position: absolute" aria-hidden="true" focusable="false">
+  <symbol id="crown" viewBox="0 0 64 40">
+    <path d="M9 31 L4 13 L16 23 L22 8 L27 19 L32 3 L37 19 L42 8 L48 23 L60 13 L55 31 Z"
+      fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M9 35.5 H55" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+    <g fill="currentColor">
+      <circle cx="4" cy="12" r="2.2"/><circle cx="22" cy="7" r="2.2"/><circle cx="32" cy="2.4" r="2.4"/>
+      <circle cx="42" cy="7" r="2.2"/><circle cx="60" cy="12" r="2.2"/>
+      <path d="M32 22 L35 26 L32 30 L29 26 Z"/>
+    </g>
+  </symbol>
+</svg>
+
+<canvas class="sky" id="sky" aria-hidden="true"></canvas>
+
+<main class="page">
+  <header class="masthead">
+    <svg class="crown" viewBox="0 0 64 40" aria-hidden="true" focusable="false"><use href="#crown"/></svg>
+    <p class="script">Mis XV · Morena</p>
+  </header>
+
+  <section class="panel" aria-labelledby="pageTitle">
+    <svg class="icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <path d="M10 22l6-8h16l6 8-14 20z"/>
+      <path d="M10 22h28M16 14l4 8 4-8 4 8 4-8M20 22l4 20 4-20"/>
+      <path d="M24 3v5M14 5l2.5 4M34 5l-2.5 4M6 12l4 2M42 12l-4 2"/>
+    </svg>
+    <h1 class="heading" id="pageTitle">Dress code</h1>
+    <p class="lead" id="dressLabel"></p>
+    <hr class="rule">
+    <h2 class="label">Restricciones</h2>
+    <p class="body-text" id="restrictionsText"></p>
+  </section>
+
+  <a class="btn" id="backLink" href="https://morena0512.my.canva.site/">Volver a la invitación</a>
+</main>
+
+<script>
+  (function () {
+    // Everything Pablo may need to edit lives here. Values starting with "[Completar" render as marked
+    // placeholders so they are easy to spot before the link is shared.
+    var CONFIG = {
+      invitationUrl: "https://morena0512.my.canva.site/",
+      dressCode: "Formal - Elegante",
+      restrictions: "[Completar: restricciones del dress code]"
+    };
+
+    var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    function byId(id) { return document.getElementById(id); }
+
+    function fill(id, value) {
+      var el = byId(id);
+      el.textContent = value;
+      el.classList.toggle("is-placeholder", /^\[Completar/.test(value));
+    }
+
+    fill("dressLabel", CONFIG.dressCode);
+    fill("restrictionsText", CONFIG.restrictions);
+    byId("backLink").href = CONFIG.invitationUrl;
+
+    // Sparkle sky: twinkling points and a few four-point glints on a fixed canvas behind the page.
+    var canvas = byId("sky");
+    var ctx = canvas.getContext && canvas.getContext("2d");
+    if (!ctx) return;
+    var stars = [];
+    var width = 0;
+    var height = 0;
+
+    function seed() {
+      var ratio = Math.min(window.devicePixelRatio || 1, 2);
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = Math.round(width * ratio);
+      canvas.height = Math.round(height * ratio);
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      var count = Math.round(Math.min(120, (width * height) / 6000));
+      stars = [];
+      for (var i = 0; i < count; i++) {
+        stars.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          r: Math.random() * 1.1 + 0.3,
+          glint: Math.random() < 0.12,
+          phase: Math.random() * Math.PI * 2,
+          speed: 0.6 + Math.random() * 1.4
+        });
+      }
+    }
+
+    function draw(time) {
+      ctx.clearRect(0, 0, width, height);
+      var t = time / 1000;
+      stars.forEach(function (star) {
+        var a = reduceMotion ? 0.6 : 0.25 + 0.75 * Math.abs(Math.sin(star.phase + t * star.speed));
+        ctx.globalAlpha = a;
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+        ctx.fill();
+        if (star.glint) {
+          var len = 4 + 6 * a;
+          ctx.strokeStyle = "#ffffff";
+          ctx.lineWidth = 0.8;
+          ctx.beginPath();
+          ctx.moveTo(star.x - len, star.y);
+          ctx.lineTo(star.x + len, star.y);
+          ctx.moveTo(star.x, star.y - len);
+          ctx.lineTo(star.x, star.y + len);
+          ctx.stroke();
+        }
+      });
+      ctx.globalAlpha = 1;
+      if (!reduceMotion) requestAnimationFrame(draw);
+    }
+
+    seed();
+    var resizeTimer = 0;
+    window.addEventListener("resize", function () {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function () {
+        seed();
+        if (reduceMotion) draw(0);
+      }, 150);
+    });
+    if (reduceMotion) draw(0);
+    else requestAnimationFrame(draw);
+  })();
+</script>
