@@ -76,8 +76,10 @@ to another page of the design, so they cannot open a panel or copy the alias. Ho
 - Pablo asked to drop the crown and the "Mis XV · Morena" script title from both pages; removed with their
   CSS, the crown symbol and the Great Vibes font. Checked at 360 and 430px: no console errors, no horizontal
   scroll; parent checked both screenshots.
+- Canva moved the site to https://more-0512.my.canva.site/ (2026-10-25); every envelope CTA and both back links now use it (older entries above keep the old URL as history).
+- Pablo linked the Canva buttons to both pages.
 - Still placeholders: alias and account holder.
 
 ## Next step
 
-- T4 on Pablo: link the Canva buttons and send the alias and account holder.
+- T4 on Pablo: send the alias and account holder.

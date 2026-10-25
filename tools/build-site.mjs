@@ -26,7 +26,7 @@ const defaults = {
   docs: join(root, "docs"),
   base: "https://paalanis.github.io/tarjetaMore/",
   guestsFile: join(root, "tools", "guests.json"),
-  canvaInvitation: "https://morena0512.my.canva.site/",
+  canvaInvitation: "https://more-0512.my.canva.site/",
 };
 
 const [, , sourceArg, docsArg, baseArg, guestsArg] = process.argv;
