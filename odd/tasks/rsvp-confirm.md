@@ -65,6 +65,11 @@ small Apps Script web app reads and writes.
   no horizontal scroll, no page errors. `docs/marta/` stores `marta` in `xvMorenaGuestId`; `docs/` leaves it
   unchanged. Extra behaviour: Code.gs answers `busy` when its lock times out, and a failed GET shows a
   "No pudimos cargar tu invitación" WhatsApp fallback. Parent spot check: rebuild leaves the tree clean.
+- Native review (range `d5c1ea3..HEAD`, T2 plus docs): medium, granted, approved, acknowledged (authority
+  burned). Advisory follow-ups: one shared `localStorage` key means a phone that opened several envelopes
+  confirms for the last one; ids are guessable slugs with no token, so anyone can read or overwrite a row;
+  `confirmar/` must not be linked from Canva before the endpoint is set; no repeatable test of the server
+  checks in `Code.gs`.
 - Open risk for T3: WhatsApp's in-app browser may keep storage apart from the browser that opens Canva;
   check on a real phone.
 
