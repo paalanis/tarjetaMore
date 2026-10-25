@@ -128,7 +128,7 @@ small Apps Script web app reads and writes.
 
 ## Next step
 
-- Pablo redeploys `tools/rsvp/Code.gs` as a new version (T7 changes).
+- Pablo redeployed `tools/rsvp/Code.gs` (T7); live list returns the 6 lowercase ids and `?id=PABLO-ALANIS` finds the row.
 - T4: Pablo links the Canva "Confirmar" button to `https://paalanis.github.io/tarjetaMore/confirmar/`.
 - Before sending: test on a real phone through WhatsApp (in-app browser storage), and rerun
   `npm run build:sheet` after any change to the families in the sheet.
