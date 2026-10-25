@@ -107,6 +107,10 @@ small Apps Script web app reads and writes.
   (`1852df4`); all six return 200, `/marta/` 404, og images 200; the og image for marcos-sebastianelli reads
   "Para Marcos Sebastianelli". Live: `/julieta-gil/` stores its id, then `/confirmar/` shows "Hola, Julieta
   Gil" with a stepper capped at 4, no page errors (nothing submitted).
+- Native review (range `5142e84..HEAD`, T3-T6): medium, granted, approved, acknowledged (authority burned).
+  Advisory follow-ups: `?action=list` writes ids before checking duplicates, so a failed list still changes
+  the sheet; a family whose id is `general` would overwrite the general og image; hand-typed ids keep
+  uppercase; no committed test for sheet mode or slugify drift. None affects the current 6 families.
 
 ## Next step
 
