@@ -95,7 +95,8 @@ small Apps Script web app reads and writes.
   Code.gs harness passed 6/6 (ids filled from nombre, no phone/max/answer in the list, duplicate_id and
   empty_id, lookup by filled id, POST bounds, lock released, slugify matches the build). Extra: ids that
   clash with build folders are refused. Neither mode deletes stale guest folders (`marta/` stays).
-  Parent spot check: `npm run build` leaves the tree clean.
+  Parent spot check: `npm run build` leaves the tree clean. Native assess (base `5142e84`, committed): medium,
+  `under_budget` (265 lines), so no review yet; the slice stays pending.
 
 ## Next step
 
