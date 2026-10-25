@@ -39,7 +39,9 @@ to another page of the design, so they cannot open a panel or copy the alias. Ho
   edit surface, so not changed. Route: inline (one small edit plus rebuild). Done: the block was removed
   and the prototype CTA default now points at Canva; `docs/marta/` keeps `href="https://morena0512.my.canva.site/"`
   and no longer contains the `searchParams.set("n"` code; a second build leaves `git status` clean.
-- [ ] T3 Publish (push) and check HTTP 200 for the new pages. Route: inline. Needs Pablo's go-ahead.
+- [x] T3 Publish (push) and check HTTP 200 for the new pages. Route: inline. Pushed `14e0c8d` with Pablo's
+  go-ahead; 200 for `/`, `/marta/`, `/restricciones/`, `/transferencia/`, `/invitacion/` and both og JPGs;
+  live `/marta/` CTA is the Canva URL with no runtime `?n=` code.
 - [ ] T4 Pablo links the Canva buttons to the two pages and fills the missing data (alias and account holder). Pending on Pablo.
 
 ## Acceptance criteria
@@ -75,4 +77,4 @@ to another page of the design, so they cannot open a panel or copy the alias. Ho
 
 ## Next step
 
-- T3 publish once Pablo gives the go-ahead; T4 on Pablo.
+- T4 on Pablo: link the Canva buttons and send the alias and account holder.
