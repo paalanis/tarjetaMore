@@ -64,6 +64,10 @@ to another page of the design, so they cannot open a panel or copy the alias. Ho
   reduced motion, shows no console errors, `scrollWidth` equal to the viewport, the back link pointing at
   the Canva site in the same tab, and "Copiar alias" showing "¡Alias copiado!" (clipboard API and the
   forced fallback path).
+- T2a done (`fbb78a0`).
+- Native review (T1-T2a range): medium, granted, approved, acknowledged. Advisory follow-ups: "Copiar alias"
+  still copies the placeholder text until the real alias is set; no automated assertion for the CTA href;
+  og render drift between machines.
 - Still placeholders: restrictions text, alias and account holder.
 
 ## Next step
