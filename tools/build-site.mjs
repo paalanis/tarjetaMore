@@ -64,7 +64,7 @@ const reservedDirs = new Set(["og", "invitacion", "restricciones", "transferenci
 async function sheetGuests() {
   let endpoint = process.env.RSVP_ENDPOINT;
   if (!endpoint) {
-    const config = readFileSync(defaults.confirm, "utf8").match(/rsvpEndpoint:s*"([^"]*)"/);
+    const config = readFileSync(defaults.confirm, "utf8").match(/rsvpEndpoint:\s*"([^"]*)"/);
     endpoint = config ? config[1] : "";
   }
   if (!endpoint) fail(`no rsvpEndpoint found in the CONFIG of ${defaults.confirm}`);
