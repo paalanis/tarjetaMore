@@ -2,8 +2,8 @@
 // Open Graph preview image so WhatsApp shows the sealed envelope (with the guest's name when present),
 // the invitation page at invitacion/, and the two info pages the Canva invitation's buttons link to:
 // restricciones/ (dress code restrictions) and transferencia/ (gift alias with a copy button). Every
-// envelope's "VER INVITACIÓN" link is rewritten to a relative URL (carrying ?n=<guest> on guest pages),
-// so the site works under any base URL.
+// envelope's "VER INVITACIÓN" link is rewritten to the Canva invitation, without ?n= since Canva cannot
+// read it. invitacion/ is still built but no page links to it any more.
 //
 // Usage: npm run build
 //    or: node tools/build-site.mjs [envelope.html] [docs-dir] [base-url] ["Guest One,Guest Two"]
@@ -26,6 +26,7 @@ const defaults = {
   docs: join(root, "docs"),
   base: "https://paalanis.github.io/tarjetaMore/",
   guestsFile: join(root, "tools", "guests.json"),
+  canvaInvitation: "https://morena0512.my.canva.site/",
 };
 
 const [, , sourceArg, docsArg, baseArg, guestsArg] = process.argv;
@@ -47,7 +48,7 @@ const artifactBody = (path) =>
 const body = artifactBody(sourcePath);
 const invitationBody = artifactBody(defaults.invitation);
 
-// The envelope's call to action, rewritten per page to a relative invitation link.
+// The envelope's call to action, rewritten on every page to the Canva invitation.
 const ctaHref = /(<a\b[^>]*\bid="cta"[^>]*\bhref=")[^"]*(")/;
 if (!ctaHref.test(body)) throw new Error(`No <a id="cta" href="..."> found in ${sourcePath}`);
 const withInviteLink = (html, href) => html.replace(ctaHref, `$1${href}$2`);
@@ -138,19 +139,19 @@ try {
     const dir = slug ? join(docs, slug) : docs;
     mkdirSync(dir, { recursive: true });
     const pageUrl = slug ? `${base}${slug}/` : base;
-    const inviteHref = slug ? `../invitacion/?n=${encodeURIComponent(guest)}` : "invitacion/";
     writeFileSync(join(dir, "index.html"), pageHtml({
       guest,
       title: guest ? `Para ${guest} · Mis XV de Morena` : "Mis XV · Morena",
       description: "Una invitación especial te espera.",
       pageUrl,
       imageUrl: `${base}og/${imageName}`,
-      content: withInviteLink(body, inviteHref),
+      content: withInviteLink(body, defaults.canvaInvitation),
     }));
     console.log(pageUrl);
   }
 
-  // The invitation page reads the guest from ?n= itself, so one page serves everyone.
+  // The own invitation page, kept as a fallback to the Canva one: it is built but no envelope links to it.
+  // It reads the guest from ?n= itself, so one page serves everyone.
   const invitationUrl = `${base}invitacion/`;
   mkdirSync(join(docs, "invitacion"), { recursive: true });
   writeFileSync(join(docs, "invitacion", "index.html"), pageHtml({
