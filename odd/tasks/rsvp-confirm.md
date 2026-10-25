@@ -51,6 +51,11 @@ small Apps Script web app reads and writes.
 - [x] T6 Pablo redeploys the script as a new version of the same deployment (same `/exec` URL); build the
   real envelopes from the sheet, publish, and check one family end to end. Route: inline. Commits
   `fe0c839`, `1852df4`, pushed.
+- [x] T7 Close the T3-T6 review follow-ups (Pablo asked): `?action=list` validates every row before writing
+  ids back; ids are lowercased in the list and the build; `general` (the general og image name) is a reserved
+  slug; committed `node --test` tests for sheet mode (real CONFIG parsing, error handling, slug checks) and
+  for `Code.gs` (stubbed Apps Script services) including slugify parity with the build. Route: delegated
+  writer (writer trigger: 2+ non-trivial files). Commit `8a68158`. Pablo redeploys the script afterwards.
 
 ## Acceptance criteria
 
@@ -111,6 +116,11 @@ small Apps Script web app reads and writes.
   Advisory follow-ups: `?action=list` writes ids before checking duplicates, so a failed list still changes
   the sheet; a family whose id is `general` would overwrite the general og image; hand-typed ids keep
   uppercase; no committed test for sheet mode or slugify drift. None affects the current 6 families.
+- T7 done (`8a68158`): sheet logic moved to `tools/sheet-guests.mjs`; `npm test` (`node --test`, 25 tests).
+  RED before the fixes: 6 of 25 failed for the intended reasons (uppercase id kept, ids written on
+  duplicate_id/empty_id, `general` accepted, mixed-case slug and message). GREEN after: 25/25. `npm run build`
+  leaves docs/ unchanged; `node --check` on Code.gs passes. About 530 lines, mostly tests (over the advisory
+  400). Parent spot check: `npm test` 25/25 and a clean rebuild. Pablo must redeploy Code.gs (new version).
 
 ## Next step
 
