@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es" data-guest="Marta">
+<html lang="es" data-guest="Marta" data-guest-id="marta">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -573,6 +573,17 @@
         name = "";
       }
       return name.trim().slice(0, 40);
+    }
+
+    // Guest pages carry their slug in data-guest-id; keep it so the RSVP page (confirmar/) knows the
+    // family. The general page has none and leaves any stored id alone.
+    var guestId = document.documentElement.getAttribute("data-guest-id");
+    if (guestId) {
+      try {
+        window.localStorage.setItem("xvMorenaGuestId", guestId);
+      } catch (e) {
+        // Storage blocked (private mode, disabled cookies): confirmar/ falls back to its own message.
+      }
     }
 
     var guest = readGuestName();

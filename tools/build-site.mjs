@@ -1,7 +1,9 @@
 // Builds the static invitation site: a general envelope page plus one per guest, each with its own
 // Open Graph preview image so WhatsApp shows the sealed envelope (with the guest's name when present),
-// the invitation page at invitacion/, and the two info pages the Canva invitation's buttons link to:
-// restricciones/ (dress code restrictions) and transferencia/ (gift alias with a copy button). Every
+// the invitation page at invitacion/, and the info pages the Canva invitation's buttons link to:
+// restricciones/ (dress code restrictions), transferencia/ (gift alias with a copy button) and confirmar/
+// (RSVP saved to a Google Sheet, see tools/rsvp/Code.gs). Guest pages carry their slug in data-guest-id,
+// which the envelope stores so confirmar/ knows the family. Every
 // envelope's "VER INVITACIÓN" link is rewritten to the Canva invitation, without ?n= since Canva cannot
 // read it. invitacion/ is still built but no page links to it any more.
 //
@@ -10,7 +12,7 @@
 //
 // Every argument is optional. Defaults: prototype/envelope.html, docs/, the GitHub Pages URL, and the
 // guest list in tools/guests.json. The other sources are always prototype/invitation.html,
-// prototype/restrictions.html and prototype/transfer.html. Real guest data must never be committed; pass
+// prototype/restrictions.html, prototype/transfer.html and prototype/confirm.html. Real guest data must never be committed; pass
 // it as the fourth argument or keep a local, git-ignored list instead.
 import { chromium } from "playwright";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -23,6 +25,7 @@ const defaults = {
   invitation: join(root, "prototype", "invitation.html"),
   restrictions: join(root, "prototype", "restrictions.html"),
   transfer: join(root, "prototype", "transfer.html"),
+  confirm: join(root, "prototype", "confirm.html"),
   docs: join(root, "docs"),
   base: "https://paalanis.github.io/tarjetaMore/",
   guestsFile: join(root, "tools", "guests.json"),
@@ -59,8 +62,9 @@ const escapeHtml = (s) =>
 const slugify = (s) =>
   s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
-function pageHtml({ guest = "", title, description, pageUrl, imageUrl, content }) {
-  const guestAttr = guest ? ` data-guest="${escapeHtml(guest)}"` : "";
+function pageHtml({ guest = "", guestId = "", title, description, pageUrl, imageUrl, content }) {
+  const guestAttr = (guest ? ` data-guest="${escapeHtml(guest)}"` : "") +
+    (guestId ? ` data-guest-id="${escapeHtml(guestId)}"` : "");
   return `<!doctype html>
 <html lang="es"${guestAttr}>
 <head>
@@ -141,6 +145,7 @@ try {
     const pageUrl = slug ? `${base}${slug}/` : base;
     writeFileSync(join(dir, "index.html"), pageHtml({
       guest,
+      guestId: slug,
       title: guest ? `Para ${guest} · Mis XV de Morena` : "Mis XV · Morena",
       description: "Una invitación especial te espera.",
       pageUrl,
@@ -176,6 +181,12 @@ try {
       source: defaults.transfer,
       title: "Regalo · Mis XV de Morena",
       description: "Datos para transferencia: alias y titular de la cuenta, con un botón para copiar el alias.",
+    },
+    {
+      dir: "confirmar",
+      source: defaults.confirm,
+      title: "Confirmar asistencia · Mis XV de Morena",
+      description: "Confirmá cuántos van a asistir a los XV de Morena.",
     },
   ];
   for (const { dir, source, title, description } of infoPages) {
