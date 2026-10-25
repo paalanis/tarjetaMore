@@ -33,10 +33,12 @@ to another page of the design, so they cannot open a panel or copy the alias. Ho
   page source plus build script changes, 2+ non-trivial files). Commit `f6ac5bf`.
 - [x] T2 Point every envelope CTA at the Canva site and rebuild `docs/`. Route: same delegated writer.
   Commit `0a275ec`. The built `href` has no `?n=`; see T2a for the runtime one.
-- [ ] T2a Stop the envelope script from appending `?n=<guest>` to the CTA at runtime on guest pages
+- [x] T2a Stop the envelope script from appending `?n=<guest>` to the CTA at runtime on guest pages
   (`prototype/envelope.html`, "Carry the name over to the invitation page" block). Found while verifying
   T2: `docs/marta/` resolves the link to `https://morena0512.my.canva.site/?n=Marta`. Outside the T1/T2
-  edit surface, so not changed. Route: inline (one small edit plus rebuild).
+  edit surface, so not changed. Route: inline (one small edit plus rebuild). Done: the block was removed
+  and the prototype CTA default now points at Canva; `docs/marta/` keeps `href="https://morena0512.my.canva.site/"`
+  and no longer contains the `searchParams.set("n"` code; a second build leaves `git status` clean.
 - [ ] T3 Publish (push) and check HTTP 200 for the new pages. Route: inline. Needs Pablo's go-ahead.
 - [ ] T4 Pablo links the Canva buttons to the two pages and fills the missing data. Pending on Pablo.
 
@@ -66,4 +68,4 @@ to another page of the design, so they cannot open a panel or copy the alias. Ho
 
 ## Next step
 
-- T2a (envelope runtime `?n=`), then T3 publish once Pablo gives the go-ahead.
+- T3 publish once Pablo gives the go-ahead; T4 on Pablo.
