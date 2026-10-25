@@ -48,8 +48,9 @@ small Apps Script web app reads and writes.
   guest pages), fills an empty `id` from `nombre` with the same slugify as the build, and matches lookups on
   that id; `tools/build-site.mjs` gets a sheet mode (`npm run build:sheet`) that fetches the list and uses
   the sheet `id` as the page slug. Route: delegated writer (writer trigger: 2+ non-trivial files). Commit `e2bd3a9`.
-- [ ] T6 Pablo redeploys the script as a new version of the same deployment (same `/exec` URL); build the
-  real envelopes from the sheet, publish, and check one family end to end. Route: inline.
+- [x] T6 Pablo redeploys the script as a new version of the same deployment (same `/exec` URL); build the
+  real envelopes from the sheet, publish, and check one family end to end. Route: inline. Commits
+  `fe0c839`, `1852df4`, pushed.
 
 ## Acceptance criteria
 
@@ -98,8 +99,17 @@ small Apps Script web app reads and writes.
   Parent spot check: `npm run build` leaves the tree clean. Native assess (base `5142e84`, committed): medium,
   `under_budget` (265 lines), so no review yet; the slice stays pending.
 
+- T6 done: after Pablo published the new version, `?action=list` returned 6 families with only id and name.
+  Pablo had typed 1-6 in `id`; on the parent's advice he cleared them so the script filled name slugs.
+  `npm run build:sheet` first failed: the endpoint regex in `tools/build-site.mjs` had lost its backslash
+  (`s*` for `s*`), missed by T5 tests that used `RSVP_ENDPOINT`; fixed in `fe0c839`. `tools/guests.json`
+  is now `[]` and `marta/` plus its og image were removed (Pablo agreed). Built and published 6 envelopes
+  (`1852df4`); all six return 200, `/marta/` 404, og images 200; the og image for marcos-sebastianelli reads
+  "Para Marcos Sebastianelli". Live: `/julieta-gil/` stores its id, then `/confirmar/` shows "Hola, Julieta
+  Gil" with a stepper capped at 4, no page errors (nothing submitted).
+
 ## Next step
 
 - T4: Pablo links the Canva "Confirmar" button to `https://paalanis.github.io/tarjetaMore/confirmar/`.
-- Before sending: build the real guest pages with names whose slugs match the sheet `id` column, and test on
-  a real phone through WhatsApp (in-app browser storage).
+- Before sending: test on a real phone through WhatsApp (in-app browser storage), and rerun
+  `npm run build:sheet` after any change to the families in the sheet.
