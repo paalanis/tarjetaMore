@@ -157,6 +157,35 @@
     overflow-wrap: anywhere;
   }
 
+  /* Decorative dots for the colors to avoid, each crossed out with a thin diagonal. */
+  .swatches {
+    display: flex;
+    gap: 14px;
+    margin: 4px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .swatches li {
+    position: relative;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--swatch);
+    box-shadow: 0 0 0 1px var(--silver-deep);
+  }
+
+  .swatches li::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: -3px;
+    right: -3px;
+    height: 1.5px;
+    background: var(--white);
+    transform: rotate(-45deg);
+  }
+
   .is-placeholder {
     padding: 0 0.3em;
     border: 1px dashed var(--placeholder);
@@ -228,10 +257,15 @@
       <path d="M24 3v5M14 5l2.5 4M34 5l-2.5 4M6 12l4 2M42 12l-4 2"/>
     </svg>
     <h1 class="heading" id="pageTitle">Dress code</h1>
-    <p class="lead" id="dressLabel"></p>
     <hr class="rule">
-    <h2 class="label">Restricciones</h2>
-    <p class="body-text" id="restrictionsText"></p>
+    <h2 class="label">No utilizar color</h2>
+    <p class="lead" id="avoidColors"></p>
+    <ul class="swatches" aria-hidden="true">
+      <li style="--swatch: #f2a7c3"></li>
+      <li style="--swatch: #c9ccd1"></li>
+      <li style="--swatch: #b9a2d8"></li>
+      <li style="--swatch: #e9d5b0"></li>
+    </ul>
   </section>
 
   <a class="btn" id="backLink" href="https://morena0512.my.canva.site/">Volver a la invitación</a>
@@ -243,8 +277,7 @@
     // placeholders so they are easy to spot before the link is shared.
     var CONFIG = {
       invitationUrl: "https://morena0512.my.canva.site/",
-      dressCode: "Formal - Elegante",
-      restrictions: "[Completar: restricciones del dress code]"
+      avoidColors: "Rosa, Plateado, Lila y Champagne"
     };
 
     var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -257,8 +290,7 @@
       el.classList.toggle("is-placeholder", /^\[Completar/.test(value));
     }
 
-    fill("dressLabel", CONFIG.dressCode);
-    fill("restrictionsText", CONFIG.restrictions);
+    fill("avoidColors", CONFIG.avoidColors);
     byId("backLink").href = CONFIG.invitationUrl;
 
     // Sparkle sky: twinkling points and a few four-point glints on a fixed canvas behind the page.

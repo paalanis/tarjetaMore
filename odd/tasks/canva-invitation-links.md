@@ -40,7 +40,7 @@ to another page of the design, so they cannot open a panel or copy the alias. Ho
   and the prototype CTA default now points at Canva; `docs/marta/` keeps `href="https://morena0512.my.canva.site/"`
   and no longer contains the `searchParams.set("n"` code; a second build leaves `git status` clean.
 - [ ] T3 Publish (push) and check HTTP 200 for the new pages. Route: inline. Needs Pablo's go-ahead.
-- [ ] T4 Pablo links the Canva buttons to the two pages and fills the missing data. Pending on Pablo.
+- [ ] T4 Pablo links the Canva buttons to the two pages and fills the missing data (alias and account holder). Pending on Pablo.
 
 ## Acceptance criteria
 
@@ -68,7 +68,10 @@ to another page of the design, so they cannot open a panel or copy the alias. Ho
 - Native review (T1-T2a range): medium, granted, approved, acknowledged. Advisory follow-ups: "Copiar alias"
   still copies the placeholder text until the real alias is set; no automated assertion for the CTA href;
   og render drift between machines.
-- Still placeholders: restrictions text, alias and account holder.
+- Restrictions content set by Pablo: "Dress code" / "No utilizar color" / "Rosa, Plateado, Lila y Champagne",
+  with four crossed-out color dots; "Formal - Elegante" removed from this page (it stays in the Canva section).
+  Checked at 360 and 430px: no console errors, no horizontal scroll; parent checked the screenshot.
+- Still placeholders: alias and account holder.
 
 ## Next step
 
