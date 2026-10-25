@@ -121,9 +121,14 @@ small Apps Script web app reads and writes.
   duplicate_id/empty_id, `general` accepted, mixed-case slug and message). GREEN after: 25/25. `npm run build`
   leaves docs/ unchanged; `node --check` on Code.gs passes. About 530 lines, mostly tests (over the advisory
   400). Parent spot check: `npm test` 25/25 and a clean rebuild. Pablo must redeploy Code.gs (new version).
+- Native review (range `62897c0..HEAD`, T7): medium, granted, approved, acknowledged (authority burned).
+  Advisory follow-ups: `npm test` relies on `node --test` glob expansion (Node 21+; no engines field);
+  a null row in the list throws a TypeError instead of a clean message; the closed-port test can flake and
+  one assert runs inside a server handler.
 
 ## Next step
 
+- Pablo redeploys `tools/rsvp/Code.gs` as a new version (T7 changes).
 - T4: Pablo links the Canva "Confirmar" button to `https://paalanis.github.io/tarjetaMore/confirmar/`.
 - Before sending: test on a real phone through WhatsApp (in-app browser storage), and rerun
   `npm run build:sheet` after any change to the families in the sheet.
