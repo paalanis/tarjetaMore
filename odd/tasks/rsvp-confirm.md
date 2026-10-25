@@ -43,6 +43,13 @@ small Apps Script web app reads and writes.
 - [x] T3 Pablo deploys the Apps Script and sends the web app URL; set it in the confirm page CONFIG,
   publish, and run an end-to-end check against the sheet. Route: inline. Commit `f77ad0c`, pushed.
 - [ ] T4 Pablo links the Canva "Confirmar" button to `https://paalanis.github.io/tarjetaMore/confirmar/`.
+- [x] T5 Build the guest envelopes from the sheet (Pablo asked so he only edits the sheet). `Code.gs` gets a
+  `doGet?action=list` that returns only `{id, name}` per row (names are already public through the built
+  guest pages), fills an empty `id` from `nombre` with the same slugify as the build, and matches lookups on
+  that id; `tools/build-site.mjs` gets a sheet mode (`npm run build:sheet`) that fetches the list and uses
+  the sheet `id` as the page slug. Route: delegated writer (writer trigger: 2+ non-trivial files). Commit `e2bd3a9`.
+- [ ] T6 Pablo redeploys the script as a new version of the same deployment (same `/exec` URL); build the
+  real envelopes from the sheet, publish, and check one family end to end. Route: inline.
 
 ## Acceptance criteria
 
@@ -81,6 +88,14 @@ small Apps Script web app reads and writes.
   200, `/marta/` stores `marta`, then `/confirmar/` calls the script from github.io and shows the
   open-your-link message (Marta is not in the sheet), no page errors.
 - The test row `pablo-alanis` was left with `Confirmado = 0` and a date; Pablo clears it before sending.
+
+- T5 done (`e2bd3a9`): `npm run build` leaves docs/ unchanged; sheet mode against a mock built
+  `familia-perez/` and `romina-gonzalez/` with accented names and og images (then removed); duplicate_id and a
+  down server exit 1 with a clear message and write nothing; `node --check` on Code.gs passes; a stubbed
+  Code.gs harness passed 6/6 (ids filled from nombre, no phone/max/answer in the list, duplicate_id and
+  empty_id, lookup by filled id, POST bounds, lock released, slugify matches the build). Extra: ids that
+  clash with build folders are refused. Neither mode deletes stale guest folders (`marta/` stays).
+  Parent spot check: `npm run build` leaves the tree clean.
 
 ## Next step
 
