@@ -40,8 +40,8 @@ small Apps Script web app reads and writes.
 - [x] T1 Create the Google Sheet with the guest list and an `id` column. Route: inline (Drive connector).
 - [x] T2 Write `tools/rsvp/Code.gs`, the envelope guest-id storage and the `/confirmar/` page, and build
   `docs/`. Route: delegated writer (writer trigger: 3+ non-trivial files). Commit `a628291`.
-- [ ] T3 Pablo deploys the Apps Script and sends the web app URL; set it in the confirm page CONFIG,
-  publish, and run an end-to-end check against the sheet. Route: inline.
+- [x] T3 Pablo deploys the Apps Script and sends the web app URL; set it in the confirm page CONFIG,
+  publish, and run an end-to-end check against the sheet. Route: inline. Commit `f77ad0c`, pushed.
 - [ ] T4 Pablo links the Canva "Confirmar" button to `https://paalanis.github.io/tarjetaMore/confirmar/`.
 
 ## Acceptance criteria
@@ -73,7 +73,17 @@ small Apps Script web app reads and writes.
 - Open risk for T3: WhatsApp's in-app browser may keep storage apart from the browser that opens Canva;
   check on a real phone.
 
+- T3 done (`f77ad0c`, pushed): endpoint set in `prototype/confirm.html` CONFIG and rebuilt. Live checks: GET
+  `?id=pablo-alanis` returns name and max 5 with no phone; unknown id gives `not_found`; POST counts 9 and -1
+  give `invalid_count`. Real Chrome against the real endpoint (local server): confirm 2 opened
+  "Confirmo 2 de 5 lugares… — Pablo Alanis" and the sheet read back `confirmed: 2`; a second run started at 2,
+  went to 0, sent the "no vamos a poder asistir" text and the sheet read back `0`. Live site: `/confirmar/`
+  200, `/marta/` stores `marta`, then `/confirmar/` calls the script from github.io and shows the
+  open-your-link message (Marta is not in the sheet), no page errors.
+- The test row `pablo-alanis` was left with `Confirmado = 0` and a date; Pablo clears it before sending.
+
 ## Next step
 
-- T3: Pablo pastes `tools/rsvp/Code.gs` into the sheet (Extensions > Apps Script), deploys it as a web app
-  and sends the `/exec` URL.
+- T4: Pablo links the Canva "Confirmar" button to `https://paalanis.github.io/tarjetaMore/confirmar/`.
+- Before sending: build the real guest pages with names whose slugs match the sheet `id` column, and test on
+  a real phone through WhatsApp (in-app browser storage).
