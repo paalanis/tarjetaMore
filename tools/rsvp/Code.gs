@@ -7,10 +7,11 @@
 // same /exec URL serves the new code. A brand-new deployment would get a different URL.
 //
 // Row 1 holds the headers, looked up by name: id, nombre, telefono, cantidadInvitados, Confirmado,
-// fechaConfirmacion. A row's id is the guest page slug. When the `id` cell is empty it is computed from
-// `nombre` with the same slugify as tools/build-site.mjs, e.g. "Familia Pérez" -> "familia-perez", and the
-// list action writes it back into the cell. Rows with an empty `nombre` are ignored. The phone is never
-// returned.
+// fechaConfirmacion. A row's id is the guest page slug, always answered in lowercase and looked up
+// case-insensitively. When the `id` cell is empty it is computed from `nombre` with the same slugify as
+// tools/sheet-guests.mjs, e.g. "Familia Pérez" -> "familia-perez", and a successful list action writes it
+// back into the cell. Rows with an empty `nombre` are ignored. The phone is never returned. Tests:
+// tools/test/code-gs.test.mjs (`npm test`).
 //
 // GET  ?id=<slug>                      -> {ok, id, name, max, confirmed}
 // GET  ?action=list                    -> {ok, guests: [{id, name}]} in sheet order, for the site build;
@@ -59,7 +60,8 @@ function doPost(e) {
 }
 
 // Lists every guest as {id, name} only: these names are already public through the built guest pages.
-// Empty `id` cells get their computed id written back, so the sheet shows the slug each page uses.
+// Every row is checked first; only when the whole list is valid do empty `id` cells get their computed id
+// written back, so the sheet shows the slug each page uses and an error response never changes the sheet.
 function listGuests_() {
   return withLock_(function () {
     var data = readSheet_();
@@ -67,6 +69,7 @@ function listGuests_() {
     var seen = {};
     var duplicates = [];
     var emptyRows = [];
+    var writes = [];
     for (var r = 1; r < data.values.length; r++) {
       var row = data.values[r];
       var name = String(row[data.cols.nombre]).trim();
@@ -76,17 +79,17 @@ function listGuests_() {
         emptyRows.push(r + 1);
         continue;
       }
-      if (String(row[data.cols.id]).trim() === "") {
-        data.sheet.getRange(r + 1, data.cols.id + 1).setValue(id);
-      }
-      var key = id.toLowerCase();
-      if (seen[key] && duplicates.indexOf(key) === -1) duplicates.push(key);
-      seen[key] = true;
+      if (String(row[data.cols.id]).trim() === "") writes.push({ row: r + 1, id: id });
+      if (seen[id] && duplicates.indexOf(id) === -1) duplicates.push(id);
+      seen[id] = true;
       guests.push({ id: id, name: name });
     }
-    SpreadsheetApp.flush();
     if (duplicates.length) return { ok: false, error: "duplicate_id", ids: duplicates };
     if (emptyRows.length) return { ok: false, error: "empty_id", rows: emptyRows };
+    writes.forEach(function (w) {
+      data.sheet.getRange(w.row, data.cols.id + 1).setValue(w.id);
+    });
+    SpreadsheetApp.flush();
     return { ok: true, guests: guests };
   }, function () {
     return { ok: false, error: "busy" };
@@ -101,7 +104,7 @@ function findGuest_(id) {
     var row = data.values[r];
     if (!String(row[data.cols.nombre]).trim()) continue;
     var rowId = effectiveId_(row, data.cols);
-    if (!rowId || rowId.toLowerCase() !== wanted) continue;
+    if (!rowId || rowId !== wanted) continue;
     var confirmed = row[data.cols.Confirmado];
     return {
       sheet: data.sheet,
@@ -130,13 +133,15 @@ function readSheet_() {
   return { sheet: sheet, values: values, cols: cols };
 }
 
-// The trimmed `id` cell, or the slug of `nombre` when the cell is empty.
+// The trimmed, lowercased `id` cell, or the slug of `nombre` when the cell is empty. Lowercase because the
+// id is a GitHub Pages folder and those URLs are case-sensitive; the cell itself is never rewritten.
 function effectiveId_(row, cols) {
-  var id = String(row[cols.id]).trim();
+  var id = String(row[cols.id]).trim().toLowerCase();
   return id || slugify_(String(row[cols.nombre]).trim());
 }
 
-// Must stay identical to slugify in tools/build-site.mjs: strip accents, lowercase, dashes for the rest.
+// Must stay identical to slugify in tools/sheet-guests.mjs (npm test checks it): strip accents, lowercase,
+// dashes for the rest.
 function slugify_(s) {
   return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
     .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");

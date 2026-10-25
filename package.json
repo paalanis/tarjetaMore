@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "build": "node tools/build-site.mjs",
-    "build:sheet": "node tools/build-site.mjs --sheet"
+    "build:sheet": "node tools/build-site.mjs --sheet",
+    "test": "node --test \"tools/**/*.test.mjs\""
   },
   "devDependencies": {
     "playwright": "1.49.1"
