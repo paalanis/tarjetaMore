@@ -103,3 +103,7 @@ tests with `npm test` (`node --test`).
   in). New fake case "text typed in 2 s after the box": the previous code throws, the fix sends; fake smoke
   11/11, `npm test` 52/52. Advisories left: the fake smoke lives in the session scratch, not in the repo;
   evaluate errors during the preview wait count as "not loaded" (a safe stop after 45 s).
+- L13 Native review of `3135bd4..72735eb` (medium, granted, lens reliability): approved and acknowledged;
+  advisories only (the preview must have an image; the preview wait is untested in the repo). Pablo ran the
+  full send (`npm run send`): 4 of 4 sent and marked (Pablo Alanis, Romina Gonzalez, Julieta Gil, Joel
+  Mangione); a dry run reports nothing left to send.
