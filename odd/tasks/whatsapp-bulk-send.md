@@ -76,3 +76,12 @@ tests with `npm test` (`node --test`).
   popup selector (the L7 advisory). Fix: only a popup whose text matches /válido|valid/i counts as a bad
   number. Scratch fake WhatsApp now shows that popup and adds the composer only after it: the old code fails
   with Pablo's exact message, the fix passes 6/6; `npm test` 45/45.
+- L9 Second real run: the chat opened, then "pablo-alanis: the message did not show as sent"; Pablo: "no no
+  me llego" (nothing arrived, nothing marked), so Enter did not send in the real WhatsApp Web. Changes, with
+  the cause still unproven: check the link was typed into the box; Enter, then the visible send button if
+  the box still has text; success means the box emptied and the family link shows in `#main` (no longer
+  `div.message-out`); on a SendError, the footer-only screenshot and a box/button summary (no phone, no
+  message text) are saved to a temp folder whose path is printed. Playwright 1.49 has no
+  `filter({ visible })` (silently ignored), so the button is picked by a loop over visible matches. Scratch
+  fake (starting-chat popup, delayed composer, hidden decoy button): Enter path, button fallback, nothing
+  sends, no prefill, invalid number and diagnostics content all pass 7/7; `npm test` 45/45.

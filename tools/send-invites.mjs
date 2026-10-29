@@ -15,8 +15,8 @@
 //
 // Anything unexpected (an invalid phone in the sheet, a chat that does not open, a message that does not
 // show as sent) stops the run; families already sent stay marked.
-import { readFileSync } from "node:fs";
-import { homedir } from "node:os";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { homedir, tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { readEndpoint } from "./sheet-guests.mjs";
@@ -33,7 +33,12 @@ const SELECTORS = {
   popup: '[data-animate-modal-popup="true"], div[role="dialog"]',
   // Only a popup with this text means a bad number; "Iniciando chat…" shows in the same popup first.
   invalidNumber: /válido|valid/i,
-  outgoing: "div.message-out",
+  // The clickable element, not the icon inside it (the icon itself has no size, so it never counts as visible).
+  sendButton: [
+    'footer button[aria-label="Enviar"]', 'footer button[aria-label="Send"]',
+    'footer :is(button, [role="button"]):has([data-icon="send"], [data-icon="wds-ic-send-filled"])',
+  ].join(", "),
+  conversation: "#main",
 };
 
 export class SendError extends Error {}
@@ -91,6 +96,7 @@ export function plan(list, { only = [] } = {}) {
     id: g.id,
     name: g.name,
     phone: normalizePhone(g.phone),
+    link: envelopeUrl(g.id),
     text: composeMessage(list.message, envelopeUrl(g.id)),
   }));
 }
@@ -122,8 +128,9 @@ export const fetchSendList = (endpoint, key, fetchImpl = fetch) =>
 export const markSent = (endpoint, key, id, fetchImpl = fetch) =>
   call(endpoint, { action: "mark-sent", key, id }, fetchImpl);
 
-// Opens the chat with the text typed in, sends it with Enter and waits until it shows as an outgoing
-// message. Throws SendError when the number is not on WhatsApp or the page does not behave as expected.
+// Opens the chat with the text typed in, sends it with Enter (or the send button when Enter leaves the text
+// in the box) and waits until the family's link shows in the conversation. Throws SendError when the number
+// is not on WhatsApp or the page does not behave as expected.
 export async function sendOne(page, item, { whatsappUrl = WHATSAPP_URL } = {}) {
   await page.goto(`${whatsappUrl}/send?phone=${item.phone}&text=${encodeURIComponent(item.text)}`);
   const composer = page.locator(SELECTORS.composer).last();
@@ -136,14 +143,53 @@ export async function sendOne(page, item, { whatsappUrl = WHATSAPP_URL } = {}) {
   if (opened === "timeout") fail(`${item.id}: the chat did not open within a minute`);
   // Let the link preview load so it goes out with the message.
   await page.waitForTimeout(6_000);
-  const before = await page.locator(SELECTORS.outgoing).count();
+  if (!(await composer.innerText()).includes(item.link)) fail(`${item.id}: the message was not typed into the chat box`);
   await composer.click();
   await composer.press("Enter");
-  await page.waitForFunction(
-    ([selector, count]) => document.querySelectorAll(selector).length > count,
-    [SELECTORS.outgoing, before],
-    { timeout: 30_000 },
-  ).catch(() => fail(`${item.id}: the message did not show as sent; check that chat before running again`));
+  if (!(await boxEmptied(composer, 5_000))) {
+    const buttons = await page.locator(SELECTORS.sendButton).all();
+    for (const button of buttons.reverse()) {
+      if (await button.isVisible()) {
+        await button.click();
+        break;
+      }
+    }
+    if (!(await boxEmptied(composer, 10_000))) fail(`${item.id}: Enter and the send button left the message in the box`);
+  }
+  // The link text shows in the conversation once the message is out of the box.
+  await page.locator(SELECTORS.conversation).getByText(item.link).last().waitFor({ timeout: 30_000 })
+    .catch(() => fail(`${item.id}: the message did not show as sent; check that chat before running again`));
+}
+
+async function boxEmptied(composer, timeout) {
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    if (!(await composer.innerText().catch(() => "")).trim()) return true;
+    await new Promise((r) => setTimeout(r, 250));
+  }
+  return false;
+}
+
+// What the chat box area looked like when a send failed: a screenshot of the footer only (never the chat
+// list) and a summary of the boxes and buttons there, saved in the system temp folder.
+export async function saveDiagnostics(page, id) {
+  const dir = mkdtempSync(join(tmpdir(), `tarjetamore-send-${id}-`));
+  const summary = await page.evaluate(() => {
+    const footer = [...document.querySelectorAll("footer")].pop();
+    const describe = (el) => ({
+      tag: el.tagName, role: el.getAttribute("role"), label: el.getAttribute("aria-label"),
+      icon: el.getAttribute("data-icon"), tab: el.getAttribute("data-tab"), textLength: (el.innerText || "").length,
+    });
+    return {
+      url: location.href.replace(/phone=\d+/, "phone=…").replace(/text=[^&]*/, "text=…"),
+      footers: document.querySelectorAll("footer").length,
+      boxes: [...document.querySelectorAll('[contenteditable="true"]')].map((el) => ({ ...describe(el), inFooter: !!el.closest("footer") })),
+      footerButtons: footer ? [...footer.querySelectorAll("button, [role=button], [data-icon]")].map(describe) : [],
+    };
+  }).catch((err) => ({ error: String(err) }));
+  writeFileSync(join(dir, "summary.json"), JSON.stringify(summary, null, 2));
+  await page.locator("footer").last().screenshot({ path: join(dir, "footer.png") }).catch(() => {});
+  return dir;
 }
 
 export async function waitForLogin(page, { whatsappUrl = WHATSAPP_URL, log = console.log } = {}) {
@@ -202,7 +248,12 @@ export async function main(
     log(`Sending ${items.length} message(s) in 10 seconds. Press Ctrl+C to cancel.`);
     await sleep(10_000);
     for (let i = 0; i < items.length; i++) {
-      await sendOne(page, items[i]);
+      try {
+        await sendOne(page, items[i]);
+      } catch (err) {
+        if (err instanceof SendError) log(`Details of the failure saved in ${await saveDiagnostics(page, items[i].id)}`);
+        throw err;
+      }
       await markSent(endpoint, key, items[i].id, fetchImpl);
       log(`Sent ${i + 1}/${items.length}: ${items[i].name}`);
       if (i + 1 < items.length) {

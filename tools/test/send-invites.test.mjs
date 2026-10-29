@@ -78,10 +78,12 @@ test("plan keeps unsent families in sheet order with their number and text", () 
   assert.deepEqual(plan(list()), [
     {
       id: "familia-perez", name: "Familia Pérez", phone: "5492613829997",
+      link: "https://paalanis.github.io/tarjetaMore/familia-perez/",
       text: "Hola, te invitamos a los XV de Morena\n\nhttps://paalanis.github.io/tarjetaMore/familia-perez/",
     },
     {
       id: "jose-nunez", name: "José Núñez", phone: "5492615111111",
+      link: "https://paalanis.github.io/tarjetaMore/jose-nunez/",
       text: "Hola, te invitamos a los XV de Morena\n\nhttps://paalanis.github.io/tarjetaMore/jose-nunez/",
     },
   ]);
