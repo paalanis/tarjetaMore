@@ -17,16 +17,25 @@ const HEADER = [
 ];
 const NO_DIET = { celiac: null, vegetarian: null, vegan: null, otherDiet: "" };
 
-// Loads Code.gs over a copy of rows. `busy` makes the script lock time out.
-function loadScript(rows, { busy = false } = {}) {
+// Loads Code.gs over a copy of rows. `busy` makes the script lock time out; `properties` are the script
+// properties; `message` is cell A1 of the "Mensaje" tab, which is absent when message is undefined.
+function loadScript(rows, { busy = false, properties = {}, message } = {}) {
   const grid = rows.map((row) => row.slice());
   let held = 0;
   const sheet = {
     getDataRange: () => ({ getValues: () => grid.map((row) => row.slice()) }),
     getRange: (row, col) => ({ setValue: (value) => { grid[row - 1][col - 1] = value; } }),
   };
+  const messageSheet = { getRange: (a1) => ({ getValue: () => (a1 === "A1" ? message : "") }) };
+  const spreadsheet = {
+    getSheets: () => (message === undefined ? [sheet] : [sheet, messageSheet]),
+    getSheetByName: (name) => (name === "Mensaje" && message !== undefined ? messageSheet : null),
+  };
   const context = vm.createContext({
-    SpreadsheetApp: { getActiveSpreadsheet: () => ({ getSheets: () => [sheet] }), flush() {} },
+    SpreadsheetApp: { getActiveSpreadsheet: () => spreadsheet, flush() {} },
+    PropertiesService: {
+      getScriptProperties: () => ({ getProperty: (key) => (key in properties ? properties[key] : null) }),
+    },
     LockService: {
       getScriptLock: () => ({
         waitLock() {
@@ -218,4 +227,74 @@ test("Code.gs slugify_ gives the same slugs as the build's slugify", () => {
   ];
   for (const name of names) assert.equal(context.slugify_(name), slugify(name), JSON.stringify(name));
   assert.equal(slugify("Señora Pilar Ibáñez Güemes"), "senora-pilar-ibanez-guemes");
+});
+
+// Bulk send: the sheet gains an `Enviado` column, read only by the key-protected send actions.
+const KEY = "k".repeat(24);
+const sendRows = () => [
+  [...HEADER, "Enviado"],
+  ["", "Familia Pérez", " 261 382-9997 ", 4, "", "", "", "", "", "", ""],
+  ["tia-ana", "Tía Ana Gómez", "5492610000002", 2, 1, "2026-10-01", 1, 0, 0, "", "2026-10-28"],
+  ["", "", "5490000003", 3, "", "", "", "", "", "", ""],
+];
+const sendScript = (opts = {}) =>
+  loadScript(sendRows(), { properties: { SEND_KEY: KEY }, message: "Hola, te invitamos a los XV de Morena", ...opts });
+
+test("send-list returns the message and every guest with phone and sent flag, given the key", () => {
+  const script = sendScript();
+  assert.deepEqual(script.post({ action: "send-list", key: KEY }), {
+    ok: true,
+    message: "Hola, te invitamos a los XV de Morena",
+    guests: [
+      { id: "familia-perez", name: "Familia Pérez", phone: "261 382-9997", sent: false },
+      { id: "tia-ana", name: "Tía Ana Gómez", phone: "5492610000002", sent: true },
+    ],
+  });
+  assert.deepEqual(script.grid, sendRows(), "send-list never writes");
+  assert.equal(script.held(), 0);
+});
+
+test("send actions refuse a wrong, missing or unset key without revealing phones", () => {
+  const bodies = [
+    { action: "send-list", key: "wrong" }, { action: "send-list" }, { action: "send-list", key: 5 },
+    { action: "mark-sent", key: "wrong", id: "familia-perez" },
+  ];
+  for (const body of bodies) {
+    const script = sendScript();
+    assert.deepEqual(script.post(body), { ok: false, error: "forbidden" }, JSON.stringify(body));
+    assert.deepEqual(script.grid, sendRows());
+  }
+  for (const properties of [{}, { SEND_KEY: "" }, { SEND_KEY: "short" }]) {
+    const script = sendScript({ properties });
+    const key = properties.SEND_KEY;
+    assert.deepEqual(script.post({ action: "send-list", key }), { ok: false, error: "forbidden" }, JSON.stringify(properties));
+  }
+});
+
+test("send-list reports a missing Mensaje tab and returns an empty message as is", () => {
+  assert.deepEqual(sendScript({ message: undefined }).post({ action: "send-list", key: KEY }),
+    { ok: false, error: "no_message_sheet" });
+  assert.equal(sendScript({ message: "  " }).post({ action: "send-list", key: KEY }).message, "");
+});
+
+test("send-list reports a missing Enviado column, while the RSVP actions keep working without it", () => {
+  const script = loadScript(sampleRows(), { properties: { SEND_KEY: KEY }, message: "Hola" });
+  assert.deepEqual(script.post({ action: "send-list", key: KEY }), { ok: false, error: "missing_column", column: "Enviado" });
+  assert.equal(script.get({ id: "tia-ana" }).ok, true);
+  assert.equal(script.post({ id: "tia-ana", count: 1 }).ok, true);
+});
+
+test("mark-sent stamps Enviado on the guest's row only, and rejects unknown ids", () => {
+  const script = sendScript();
+  assert.deepEqual(script.post({ action: "mark-sent", key: KEY, id: "FAMILIA-PEREZ" }), { ok: true, id: "familia-perez" });
+  assert.equal(Object.prototype.toString.call(script.grid[1][10]), "[object Date]");
+  assert.deepEqual(script.grid[1].slice(0, 10), sendRows()[1].slice(0, 10), "only Enviado changes");
+  assert.deepEqual(script.post({ action: "mark-sent", key: KEY, id: "nadie" }), { ok: false, error: "not_found" });
+  assert.deepEqual(script.post({ action: "mark-sent", key: KEY }), { ok: false, error: "bad_request" });
+  assert.deepEqual(script.grid.slice(2), sendRows().slice(2));
+  assert.equal(script.held(), 0);
+});
+
+test("an unknown action is a bad request", () => {
+  assert.deepEqual(sendScript().post({ action: "drop", key: KEY }), { ok: false, error: "bad_request" });
 });

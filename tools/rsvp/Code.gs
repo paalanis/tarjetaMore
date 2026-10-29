@@ -24,6 +24,14 @@
 //                                         dietary count is 0..count and otherDiet at most 200 characters,
 //                                         else {ok: false, error: "invalid_diet"}. Missing dietary fields
 //                                         count as 0 and "" (pages cached before they existed).
+// POST {"action": "send-list", "key": "<SEND_KEY>"}
+//                                      -> {ok, message, guests: [{id, name, phone, sent}]} for
+//                                         tools/send-invites.mjs; message is cell A1 of the `Mensaje` tab and
+//                                         sent is whether the `Enviado` cell has a value.
+// POST {"action": "mark-sent", "key": "<SEND_KEY>", "id": "<slug>"}
+//                                      -> {ok, id} after writing the date into `Enviado`.
+//                                         A wrong key gives {ok: false, error: "forbidden"}. Set the key in
+//                                         Project Settings > Script Properties as SEND_KEY.
 
 var HEADERS = [
   "id", "nombre", "cantidadInvitados", "Confirmado", "fechaConfirmacion",
@@ -32,6 +40,9 @@ var HEADERS = [
 // Dietary counts: request/response field -> sheet column.
 var DIET_COUNTS = { celiac: "celiacos", vegetarian: "vegetarianos", vegan: "veganos" };
 var OTHER_DIET_MAX = 200;
+// Columns only the bulk-send actions need; mapped when present, never required by readSheet_.
+var SEND_HEADERS = ["telefono", "Enviado"];
+var SEND_KEY_MIN = 16;
 
 function doGet(e) {
   var params = e && e.parameter ? e.parameter : {};
@@ -49,6 +60,7 @@ function doPost(e) {
   } catch (err) {
     return json_({ ok: false, error: "bad_request" });
   }
+  if (body && body.action !== undefined) return json_(sendAction_(body));
   var id = body && typeof body.id === "string" ? body.id.trim() : "";
   if (!id) return json_({ ok: false, error: "bad_request" });
 
@@ -94,6 +106,61 @@ function readDiet_(body, count) {
   if (other.length > OTHER_DIET_MAX) return null;
   diet.otherDiet = other;
   return diet;
+}
+
+// Bulk send (tools/send-invites.mjs): the only actions that return phones, so they need the SEND_KEY
+// script property (at least 16 characters). Read only by these actions: the `Enviado` column and cell A1
+// of the `Mensaje` tab, so the RSVP page keeps working without them.
+function sendAction_(body) {
+  var key = PropertiesService.getScriptProperties().getProperty("SEND_KEY");
+  if (!key || key.length < SEND_KEY_MIN || body.key !== key) return { ok: false, error: "forbidden" };
+  if (body.action === "send-list") return sendList_();
+  if (body.action === "mark-sent") return markSent_(body.id);
+  return { ok: false, error: "bad_request" };
+}
+
+function sendList_() {
+  var messageSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Mensaje");
+  if (!messageSheet) return { ok: false, error: "no_message_sheet" };
+  var data = readSheet_();
+  var missing = missingColumn_(data, SEND_HEADERS);
+  if (missing) return { ok: false, error: "missing_column", column: missing };
+  var guests = [];
+  for (var r = 1; r < data.values.length; r++) {
+    var row = data.values[r];
+    var name = String(row[data.cols.nombre]).trim();
+    if (!name) continue;
+    guests.push({
+      id: effectiveId_(row, data.cols),
+      name: name,
+      phone: String(row[data.cols.telefono]).trim(),
+      sent: String(row[data.cols.Enviado]).trim() !== ""
+    });
+  }
+  return { ok: true, message: String(messageSheet.getRange("A1").getValue()).trim(), guests: guests };
+}
+
+function markSent_(id) {
+  if (typeof id !== "string" || !id.trim()) return { ok: false, error: "bad_request" };
+  return withLock_(function () {
+    var guest = findGuest_(id.trim());
+    if (!guest) return { ok: false, error: "not_found" };
+    var missing = missingColumn_(guest, SEND_HEADERS);
+    if (missing) return { ok: false, error: "missing_column", column: missing };
+    guest.sheet.getRange(guest.row, guest.cols.Enviado + 1).setValue(new Date());
+    SpreadsheetApp.flush();
+    return { ok: true, id: guest.id };
+  }, function () {
+    return { ok: false, error: "busy" };
+  });
+}
+
+// The first of names missing from data.cols, or "" when all are there.
+function missingColumn_(data, names) {
+  for (var i = 0; i < names.length; i++) {
+    if (data.cols[names[i]] === undefined) return names[i];
+  }
+  return "";
 }
 
 // Lists every guest as {id, name} only: these names are already public through the built guest pages.
@@ -177,6 +244,9 @@ function readSheet_() {
     var index = header.indexOf(name);
     if (index === -1) throw new Error("Missing column: " + name);
     cols[name] = index;
+  });
+  SEND_HEADERS.forEach(function (name) {
+    if (header.indexOf(name) !== -1) cols[name] = header.indexOf(name);
   });
   return { sheet: sheet, values: values, cols: cols };
 }
