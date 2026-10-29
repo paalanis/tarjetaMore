@@ -56,7 +56,7 @@ small Apps Script web app reads and writes.
   slug; committed `node --test` tests for sheet mode (real CONFIG parsing, error handling, slug checks) and
   for `Code.gs` (stubbed Apps Script services) including slugify parity with the build. Route: delegated
   writer (writer trigger: 2+ non-trivial files). Commit `8a68158`. Pablo redeploys the script afterwards.
-- [ ] T8 Dietary needs in the confirm step (2026-10-29). Pablo: "Necesito agregar en el paso de
+- [x] T8 Dietary needs in the confirm step (2026-10-29). Pablo: "Necesito agregar en el paso de
   confirmaciones el detalle de si la gente es celíaca o tiene algún tipo de impedimento alimenticio. Hay que
   confirmar cuántas de las 5 personas, por ejemplo, que tienen permitido ingresar al evento o están
   invitados al evento, van a ser celíacos." He chose per-type counters: "Celíacos", "Vegetarianos",
@@ -158,10 +158,14 @@ small Apps Script web app reads and writes.
   (same guessable-id advisory as T2); the formula guard and the page logic are only checked by stubs and the
   scratch Playwright smoke; the four new columns are required (deploy order above).
 
+- T8 live: Pablo added the four columns (read back G1:J1 through the Drive connector) and redeployed
+  Code.gs; live `?id=romina-gonzalez` returns `celiac, vegetarian, vegan, otherDiet` and a POST with
+  `celiac: 2` for `count: 1` answers `invalid_diet` with the row unchanged. Pushed `a7ac590`, `f544d9f`;
+  live `/confirmar/?id=romina-gonzalez` at 390px shows the menu, caps celiacs at 2, no scroll, no page
+  errors (nothing submitted).
+
 ## Next step
 
-- T8: Pablo adds `celiacos, vegetarianos, veganos, otraRestriccion` to row 1 of the sheet, redeploys
-  `Code.gs` as a new version, then the page is pushed and checked live.
 - Pablo clears his test answer (`pablo-alanis`, `Confirmado = 3`) before sending.
 - Bulk send (new feature, not started): parent recommended a semi-automatic "Enviar" column in the sheet
   with a per-family `wa.me` link (prefilled message with the family's envelope link; Pablo taps send), tested
