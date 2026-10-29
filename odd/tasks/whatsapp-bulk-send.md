@@ -59,3 +59,14 @@ tests with `npm test` (`node --test`).
   smoke against a fake WhatsApp Web: login wait, text with accents/emoji/link sent and composer cleared,
   invalid number stops in under 10 s, an unsent message stops. Real WhatsApp Web selectors are unproven
   until T3's two-family run. Local `.send-key` created (ignored by git).
+- L6 Independent verifier (item 2) on `44eb37d`: no blockers; 6,406 adversarial requests without the exact key
+  gave 0 leaks and 0 writes; 832 paired baseline/HEAD cases of the RSVP actions were identical. Advisories: a
+  POST carrying any `action` field goes to the send actions (the page never sends one); no constant-time
+  compare or rate limit (negligible with a random 32-character key); any non-empty `Enviado` counts as sent;
+  `send-list` does not reject duplicate or empty ids (the build's list action does). Parent spot check:
+  `npm test` 45/45. Verifier scratch removed.
+- L7 Native review (`fae4f22..b68d4ec`, T1+T2): medium, granted by Pablo, lenses risk, resilience and
+  reliability, approved, acknowledged (authority burned). Advisory follow-ups, none blocking: if the message
+  goes out but `mark-sent` fails, the run stops and a rerun would send that family again (no retry of the
+  mark); the outgoing-message count proves display, not delivery; a generic `role="dialog"` could stop the run
+  on an unrelated WhatsApp dialog (a safe false stop); `send-list` duplicate/empty ids as above.
