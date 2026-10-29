@@ -65,6 +65,16 @@ small Apps Script web app reads and writes.
   otherDiet`; POST accepts them (missing means 0 / empty, for pages cached before the change) and rejects
   values that add up to more than the people attending with `invalid_diet`; the WhatsApp text lists them. Route: inline (no writer reason).
   Pablo adds the four columns, then redeploys Code.gs as a new version.
+- [ ] T9 Message for Morena (2026-10-29). Pablo: "Tambien quiera poder usar el apartado que dice \"Suma un
+  mensaje bonito\", que se logue con en cada invitacion." and, rejecting the parent's idea of a box inside
+  /confirmar/: "No, tiene que ser desde la parque que tiene la tarjeta dedicada para eso. Que sea como con
+  una cantidad limitada de caracteres, si toca lo blanco para escribir mensaje se abre algo nuevo para
+  llenarlo". In Canva "Suma un mensaje bonito:" is only a heading over a white box, which cannot take input,
+  so Pablo links that box to a new page `/mensaje/` (family from the envelope's stored id, like
+  /confirmar/). Limit: 300 characters with a visible counter (parent's default, adjustable). Saved through
+  a public POST `{action: "message", id, message}` into new optional sheet columns `mensaje,
+  fechaMensaje` (latest message wins; formula guard as for otraRestriccion); GET `?id=` returns `message`
+  so the page can show and edit it. Route: inline (no writer reason).
 
 ## Acceptance criteria
 
@@ -173,6 +183,16 @@ small Apps Script web app reads and writes.
   answer over the count is trimmed on load. The scratch smoke (51 checks, 360/390/430px) fails on the old
   page with Pablo's case ("1 celíaco, 1 vegetariano" for 1 attendee) and passes on the new one. Needs a
   Code.gs redeploy and a push.
+- T9 code done: RED 9 of 52 (message action, `message` in GET) and 1 for the reserved `mensaje` id; GREEN
+  52/52. `mensaje`/`fechaMensaje` are optional columns like `Enviado`, so the RSVP keeps working without
+  them; the formula guard is now one `plainCell_` helper shared with otraRestriccion. `prototype/message.html`
+  reuses the confirm page's head, styles and sky; built to `docs/mensaje/` (build deterministic). The
+  endpoint now lives in two CONFIGs (confirm and message). Scratch smoke with a mocked endpoint at
+  360/390/430px, 40/40: greeting, 300 counter, send disabled while empty or blank, typing stops at 300,
+  POST `{action: "message", id, message}` trimmed with the line break kept, thanks message, previous message
+  prefilled, failed save keeps the text, envelope-stored id used, no-id and unknown-id messages, no
+  horizontal scroll, no page errors. Pablo still adds the two columns, redeploys, links the Canva white box
+  to `https://paalanis.github.io/tarjetaMore/mensaje/`, and the site is pushed.
 
 ## Next step
 

@@ -129,7 +129,7 @@ test("ids unusable as a folder fail", () => {
 });
 
 test("reserved ids fail, including general (the general og image name)", () => {
-  for (const id of ["og", "invitacion", "restricciones", "transferencia", "confirmar", "general", "General", " CONFIRMAR "]) {
+  for (const id of ["og", "invitacion", "restricciones", "transferencia", "confirmar", "mensaje", "general", "General", " CONFIRMAR "]) {
     assert.throws(() => validateGuests([{ id, name: "Familia Pérez" }]), /uses the reserved id/, id);
   }
 });

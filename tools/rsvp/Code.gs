@@ -13,7 +13,8 @@
 // back into the cell. Rows with an empty `nombre` are ignored. The phone is never returned. Tests:
 // tools/test/code-gs.test.mjs (`npm test`).
 //
-// GET  ?id=<slug>                      -> {ok, id, name, max, confirmed, celiac, vegetarian, vegan, otherDiet}
+// GET  ?id=<slug>                      -> {ok, id, name, max, confirmed, celiac, vegetarian, vegan, otherDiet,
+//                                         message}; message is "" until the optional `mensaje` column exists.
 // GET  ?action=list                    -> {ok, guests: [{id, name}]} in sheet order, for the site build;
 //                                         {ok: false, error: "duplicate_id", ids} when two rows share an id
 //                                         and {ok: false, error: "empty_id", rows} when a nombre slugifies
@@ -25,6 +26,10 @@
 //                                         person) and otherDiet is at most 200 characters,
 //                                         else {ok: false, error: "invalid_diet"}. Missing dietary fields
 //                                         count as 0 and "" (pages cached before they existed).
+// POST {"action": "message", "id": "<slug>", "message": "<text>"}
+//                                      -> {ok, id, message} after writing `mensaje` and `fechaMensaje`
+//                                         (docs/mensaje/); 1-300 characters, else {ok: false, error:
+//                                         "invalid_message"}. Needs no key.
 // POST {"action": "send-list", "key": "<SEND_KEY>"}
 //                                      -> {ok, message, guests: [{id, name, phone, sent}]} for
 //                                         tools/send-invites.mjs; message is cell A1 of the `Mensaje` tab and
@@ -44,6 +49,9 @@ var OTHER_DIET_MAX = 200;
 // Columns only the bulk-send actions need; mapped when present, never required by readSheet_.
 var SEND_HEADERS = ["telefono", "Enviado"];
 var SEND_KEY_MIN = 16;
+// Columns for the message to Morena (docs/mensaje/), also optional.
+var MESSAGE_HEADERS = ["mensaje", "fechaMensaje"];
+var MESSAGE_MAX = 300;
 
 function doGet(e) {
   var params = e && e.parameter ? e.parameter : {};
@@ -61,6 +69,7 @@ function doPost(e) {
   } catch (err) {
     return json_({ ok: false, error: "bad_request" });
   }
+  if (body && body.action === "message") return json_(saveMessage_(body));
   if (body && body.action !== undefined) return json_(sendAction_(body));
   var id = body && typeof body.id === "string" ? body.id.trim() : "";
   if (!id) return json_({ ok: false, error: "bad_request" });
@@ -79,9 +88,7 @@ function doPost(e) {
     Object.keys(DIET_COUNTS).forEach(function (field) {
       guest.sheet.getRange(guest.row, guest.cols[DIET_COUNTS[field]] + 1).setValue(diet[field]);
     });
-    // A leading = + - @ would make the sheet read the guest's text as a formula; the apostrophe keeps it text.
-    var otherCell = /^[=+\-@]/.test(diet.otherDiet) ? "'" + diet.otherDiet : diet.otherDiet;
-    guest.sheet.getRange(guest.row, guest.cols.otraRestriccion + 1).setValue(otherCell);
+    guest.sheet.getRange(guest.row, guest.cols.otraRestriccion + 1).setValue(plainCell_(diet.otherDiet));
     SpreadsheetApp.flush();
     guest.confirmed = count;
     guest.diet = diet;
@@ -111,6 +118,27 @@ function readDiet_(body, count) {
   if (other.length > OTHER_DIET_MAX) return null;
   diet.otherDiet = other;
   return diet;
+}
+
+// The family's message for Morena from docs/mensaje/: 1 to 300 characters after trimming (line breaks
+// kept); the latest one replaces the previous one. Public like the RSVP save, so it needs no key.
+function saveMessage_(body) {
+  var id = typeof body.id === "string" ? body.id.trim() : "";
+  if (!id) return { ok: false, error: "bad_request" };
+  var message = typeof body.message === "string" ? body.message.trim() : "";
+  if (!message || message.length > MESSAGE_MAX) return { ok: false, error: "invalid_message" };
+  return withLock_(function () {
+    var guest = findGuest_(id);
+    if (!guest) return { ok: false, error: "not_found" };
+    var missing = missingColumn_(guest, MESSAGE_HEADERS);
+    if (missing) return { ok: false, error: "missing_column", column: missing };
+    guest.sheet.getRange(guest.row, guest.cols.mensaje + 1).setValue(plainCell_(message));
+    guest.sheet.getRange(guest.row, guest.cols.fechaMensaje + 1).setValue(new Date());
+    SpreadsheetApp.flush();
+    return { ok: true, id: guest.id, message: message };
+  }, function () {
+    return { ok: false, error: "busy" };
+  });
 }
 
 // Bulk send (tools/send-invites.mjs): the only actions that return phones, so they need the SEND_KEY
@@ -228,10 +256,16 @@ function findGuest_(id) {
       name: String(row[data.cols.nombre]).trim(),
       max: Number(row[data.cols.cantidadInvitados]) || 0,
       confirmed: countCell_(confirmed),
-      diet: diet
+      diet: diet,
+      message: data.cols.mensaje === undefined ? "" : String(row[data.cols.mensaje]).trim()
     };
   }
   return null;
+}
+
+// A leading = + - @ would make the sheet read a guest's text as a formula; the apostrophe keeps it text.
+function plainCell_(text) {
+  return /^[=+\-@]/.test(text) ? "'" + text : text;
 }
 
 // A count cell as a number, or null while it is empty.
@@ -250,7 +284,7 @@ function readSheet_() {
     if (index === -1) throw new Error("Missing column: " + name);
     cols[name] = index;
   });
-  SEND_HEADERS.forEach(function (name) {
+  SEND_HEADERS.concat(MESSAGE_HEADERS).forEach(function (name) {
     if (header.indexOf(name) !== -1) cols[name] = header.indexOf(name);
   });
   return { sheet: sheet, values: values, cols: cols };
@@ -289,7 +323,7 @@ function publicGuest_(guest) {
   return {
     ok: true, id: guest.id, name: guest.name, max: guest.max, confirmed: guest.confirmed,
     celiac: guest.diet.celiac, vegetarian: guest.diet.vegetarian, vegan: guest.diet.vegan,
-    otherDiet: guest.diet.otherDiet
+    otherDiet: guest.diet.otherDiet, message: guest.message
   };
 }
 

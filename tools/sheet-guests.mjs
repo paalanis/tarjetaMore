@@ -10,7 +10,7 @@ export const slugify = (s) =>
 
 // Folders the build writes itself, which a guest slug must not take over, plus `general`: the general page's
 // preview is og/general.jpg, which a guest's og/<slug>.jpg would overwrite.
-export const reservedSlugs = new Set(["og", "invitacion", "restricciones", "transferencia", "confirmar", "general"]);
+export const reservedSlugs = new Set(["og", "invitacion", "restricciones", "transferencia", "confirmar", "mensaje", "general"]);
 
 export class SheetGuestsError extends Error {}
 

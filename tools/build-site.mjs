@@ -1,9 +1,10 @@
 // Builds the static invitation site: a general envelope page plus one per guest, each with its own
 // Open Graph preview image so WhatsApp shows the sealed envelope (with the guest's name when present),
 // the invitation page at invitacion/, and the info pages the Canva invitation's buttons link to:
-// restricciones/ (dress code restrictions), transferencia/ (gift alias with a copy button) and confirmar/
-// (RSVP saved to a Google Sheet, see tools/rsvp/Code.gs). Guest pages carry their slug in data-guest-id,
-// which the envelope stores so confirmar/ knows the family. Every
+// restricciones/ (dress code restrictions), transferencia/ (gift alias with a copy button), confirmar/
+// (RSVP saved to a Google Sheet, see tools/rsvp/Code.gs) and mensaje/ (a message for Morena, saved to the
+// same sheet). Guest pages carry their slug in data-guest-id, which the envelope stores so confirmar/ and
+// mensaje/ know the family. Every
 // envelope's "VER INVITACIÓN" link is rewritten to the Canva invitation, without ?n= since Canva cannot
 // read it. invitacion/ is still built but no page links to it any more.
 //
@@ -13,7 +14,7 @@
 //
 // Every argument is optional. Defaults: prototype/envelope.html, docs/, the GitHub Pages URL, and the
 // guest list in tools/guests.json. The other sources are always prototype/invitation.html,
-// prototype/restrictions.html, prototype/transfer.html and prototype/confirm.html. Real guest data must never be committed; pass
+// prototype/restrictions.html, prototype/transfer.html, prototype/confirm.html and prototype/message.html. Real guest data must never be committed; pass
 // it as the fourth argument or keep a local, git-ignored list instead.
 //
 // Sheet mode (--sheet, used by build:sheet) takes the guests from the Google Sheet instead: it fetches
@@ -37,6 +38,7 @@ const defaults = {
   restrictions: join(root, "prototype", "restrictions.html"),
   transfer: join(root, "prototype", "transfer.html"),
   confirm: join(root, "prototype", "confirm.html"),
+  message: join(root, "prototype", "message.html"),
   docs: join(root, "docs"),
   base: "https://paalanis.github.io/tarjetaMore/",
   guestsFile: join(root, "tools", "guests.json"),
@@ -208,6 +210,12 @@ try {
       source: defaults.confirm,
       title: "Confirmar asistencia · Mis XV de Morena",
       description: "Confirmá cuántos van a asistir a los XV de Morena.",
+    },
+    {
+      dir: "mensaje",
+      source: defaults.message,
+      title: "Mensaje para Morena · Mis XV de Morena",
+      description: "Sumá un mensaje bonito para Morena.",
     },
   ];
   for (const { dir, source, title, description } of infoPages) {

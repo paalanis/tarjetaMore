@@ -15,7 +15,7 @@ const HEADER = [
   "id", "nombre", "telefono", "cantidadInvitados", "Confirmado", "fechaConfirmacion",
   "celiacos", "vegetarianos", "veganos", "otraRestriccion",
 ];
-const NO_DIET = { celiac: null, vegetarian: null, vegan: null, otherDiet: "" };
+const NO_DIET = { celiac: null, vegetarian: null, vegan: null, otherDiet: "", message: "" };
 
 // Loads Code.gs over a copy of rows. `busy` makes the script lock time out; `properties` are the script
 // properties; `message` is cell A1 of the "Mensaje" tab, which is absent when message is undefined.
@@ -135,7 +135,7 @@ test("doGet ?id= finds rows case-insensitively, including rows whose id cell is 
     { ok: true, id: "familia-perez", name: "Familia Pérez", max: 4, confirmed: null, ...NO_DIET });
   assert.deepEqual(script.get({ id: " tia-ana " }), {
     ok: true, id: "tia-ana", name: "Tía Ana Gómez", max: 2, confirmed: 1,
-    celiac: 1, vegetarian: 0, vegan: 0, otherDiet: "Sin lactosa",
+    celiac: 1, vegetarian: 0, vegan: 0, otherDiet: "Sin lactosa", message: "",
   });
   assert.deepEqual(script.get({ id: "nadie" }), { ok: false, error: "not_found" });
   assert.deepEqual(script.get({}), { ok: false, error: "not_found" });
@@ -160,10 +160,10 @@ test("doPost saves a valid count and the confirmation date on the guest's row on
   const script = loadScript(sampleRows());
   assert.deepEqual(script.post({ id: "FAMILIA-PEREZ", count: 4 }),
     { ok: true, id: "familia-perez", name: "Familia Pérez", max: 4, confirmed: 4,
-      celiac: 0, vegetarian: 0, vegan: 0, otherDiet: "" });
+      celiac: 0, vegetarian: 0, vegan: 0, otherDiet: "", message: "" });
   assert.deepEqual(script.post({ id: "tia-ana", count: 0 }),
     { ok: true, id: "tia-ana", name: "Tía Ana Gómez", max: 2, confirmed: 0,
-      celiac: 0, vegetarian: 0, vegan: 0, otherDiet: "" });
+      celiac: 0, vegetarian: 0, vegan: 0, otherDiet: "", message: "" });
   assert.equal(script.grid[1][4], 4);
   assert.equal(Object.prototype.toString.call(script.grid[1][5]), "[object Date]");
   assert.equal(script.grid[2][4], 0);
@@ -177,7 +177,7 @@ test("doPost saves dietary counts and the other-restriction text on the guest's 
   const body = { id: "familia-perez", count: 3, celiac: 1, vegetarian: 2, vegan: 0, otherDiet: "  Alergia   al maní " };
   assert.deepEqual(script.post(body), {
     ok: true, id: "familia-perez", name: "Familia Pérez", max: 4, confirmed: 3,
-    celiac: 1, vegetarian: 2, vegan: 0, otherDiet: "Alergia al maní",
+    celiac: 1, vegetarian: 2, vegan: 0, otherDiet: "Alergia al maní", message: "",
   });
   assert.deepEqual(script.grid[1].slice(6), [1, 2, 0, "Alergia al maní"]);
   assert.deepEqual(script.get({ id: "familia-perez" }).otherDiet, "Alergia al maní");
@@ -303,4 +303,65 @@ test("mark-sent stamps Enviado on the guest's row only, and rejects unknown ids"
 
 test("an unknown action is a bad request", () => {
   assert.deepEqual(sendScript().post({ action: "drop", key: KEY }), { ok: false, error: "bad_request" });
+});
+
+// Message for Morena (/mensaje/): optional columns mensaje and fechaMensaje, written by a public action.
+const messageRows = () => [
+  [...HEADER, "mensaje", "fechaMensaje"],
+  ["", "Familia Pérez", "5490000001", 4, "", "", "", "", "", "", "", ""],
+  ["tia-ana", "Tía Ana Gómez", "5490000002", 2, 1, "2026-10-01", 0, 0, 0, "", "¡Feliz cumple!", "2026-10-02"],
+];
+
+test("doGet ?id= returns the saved message", () => {
+  const script = loadScript(messageRows());
+  assert.equal(script.get({ id: "tia-ana" }).message, "¡Feliz cumple!");
+  assert.equal(script.get({ id: "familia-perez" }).message, "");
+});
+
+test("the message action saves the trimmed text and its date on the guest's row only, without a key", () => {
+  const script = loadScript(messageRows());
+  const text = "  Que tengas una noche hermosa,\nMore 💕  ";
+  assert.deepEqual(script.post({ action: "message", id: "Familia-Perez", message: text }),
+    { ok: true, id: "familia-perez", message: "Que tengas una noche hermosa,\nMore 💕" });
+  assert.equal(script.grid[1][10], "Que tengas una noche hermosa,\nMore 💕");
+  assert.equal(Object.prototype.toString.call(script.grid[1][11]), "[object Date]");
+  assert.deepEqual(script.grid[1].slice(0, 10), messageRows()[1].slice(0, 10), "the RSVP cells stay as they were");
+  assert.deepEqual(script.grid[2], messageRows()[2]);
+  assert.equal(script.post({ action: "message", id: "tia-ana", message: "Otro mensaje" }).ok, true);
+  assert.equal(script.grid[2][10], "Otro mensaje", "the latest message wins");
+  assert.equal(script.held(), 0);
+});
+
+test("the message action keeps formula-like text as plain text", () => {
+  const script = loadScript(messageRows());
+  assert.equal(script.post({ action: "message", id: "tia-ana", message: "=HYPERLINK(\"x\")" }).ok, true);
+  assert.equal(script.grid[2][10], "'=HYPERLINK(\"x\")");
+});
+
+test("the message action rejects an empty, too long or non-text message and unknown ids without writing", () => {
+  const script = loadScript(messageRows());
+  for (const message of ["", "   ", "x".repeat(301), 5, null, undefined]) {
+    assert.deepEqual(script.post({ action: "message", id: "tia-ana", message }), { ok: false, error: "invalid_message" },
+      JSON.stringify(message));
+  }
+  assert.equal(script.post({ action: "message", id: "tia-ana", message: "x".repeat(300) }).ok, true, "300 characters fit");
+  const fresh = loadScript(messageRows());
+  assert.deepEqual(fresh.post({ action: "message", id: "nadie", message: "Hola" }), { ok: false, error: "not_found" });
+  assert.deepEqual(fresh.post({ action: "message", message: "Hola" }), { ok: false, error: "bad_request" });
+  assert.deepEqual(fresh.grid, messageRows());
+});
+
+test("the message action reports a missing mensaje column, and the RSVP keeps working without it", () => {
+  const script = loadScript(sampleRows());
+  assert.deepEqual(script.post({ action: "message", id: "tia-ana", message: "Hola" }),
+    { ok: false, error: "missing_column", column: "mensaje" });
+  assert.deepEqual(script.grid, sampleRows());
+  assert.equal(script.post({ id: "tia-ana", count: 1 }).ok, true);
+});
+
+test("the message action never needs or reveals the send key", () => {
+  const script = loadScript(messageRows(), { properties: { SEND_KEY: KEY }, message: "Hola" });
+  const result = script.post({ action: "message", id: "tia-ana", message: "Hola", key: "wrong" });
+  assert.equal(result.ok, true);
+  assert.ok(!JSON.stringify(result).includes("549"), "no phone in the answer");
 });

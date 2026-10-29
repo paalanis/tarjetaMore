@@ -1,0 +1,440 @@
+<title>Mensaje para Morena</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Montserrat:wght@200;400;500;600&display=swap">
+<style>
+  /* Message page linked from the white box under "Suma un mensaje bonito" in the Canva invitation. The
+     family comes from the id their envelope stored; the message is saved to the guest sheet
+     (tools/rsvp/Code.gs, action "message"). Same palette and type as the other info pages. */
+  :root {
+    --night: #050507;
+    --night-glow: #22222a;
+    --panel: #000000;
+    --panel-edge: rgba(255, 255, 255, 0.07);
+    --ink: #111115;
+    --silver: #dcdde3;
+    --silver-deep: #9b9da8;
+    --white: #ffffff;
+    --font-display: "Cinzel", "Trajan Pro", Georgia, serif;
+    --font-body: "Montserrat", "Helvetica Neue", Arial, sans-serif;
+    color-scheme: dark;
+  }
+
+  [hidden] { display: none !important; }
+
+  body {
+    margin: 0;
+    background:
+      radial-gradient(70% 45% at 50% 70%, rgba(255, 255, 255, 0.05), transparent),
+      radial-gradient(120% 70% at 50% 0%, var(--night-glow), var(--night) 70%) fixed;
+    background-color: var(--night);
+    color: var(--white);
+    font-family: var(--font-body);
+    font-weight: 500;
+    line-height: 1.4;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .sky {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .page {
+    box-sizing: border-box;
+    min-height: 100svh;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 22px;
+    padding: 56px max(16px, env(safe-area-inset-right, 0px)) 56px max(16px, env(safe-area-inset-left, 0px));
+    text-align: center;
+  }
+
+  .panel,
+  .form {
+    box-sizing: border-box;
+    display: grid;
+    justify-items: center;
+    gap: 16px;
+  }
+
+  .panel {
+    width: min(100%, 380px);
+    padding: 40px 22px 34px;
+    background: var(--panel);
+    box-shadow: 0 0 0 1px var(--panel-edge), 0 20px 40px rgba(0, 0, 0, 0.5);
+  }
+
+  .form {
+    width: 100%;
+    margin: 0;
+  }
+
+  .icon {
+    width: 52px;
+    height: 52px;
+    color: var(--white);
+  }
+
+  .heading {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(1.6rem, 7.4vw, 2.1rem);
+    letter-spacing: 0.12em;
+    /* Letter spacing trails after the last glyph; pull it back so the word stays centered. */
+    margin-right: -0.12em;
+    line-height: 1.2;
+  }
+
+  .rule {
+    width: 56px;
+    height: 1px;
+    margin: 4px 0;
+    border: 0;
+    background: var(--silver-deep);
+  }
+
+  .lead {
+    margin: 0;
+    font-size: clamp(1.15rem, 5.2vw, 1.35rem);
+    font-weight: 600;
+    line-height: 1.35;
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+  }
+
+  .label {
+    margin: 0;
+    font-size: 0.75rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--silver-deep);
+  }
+
+  .body-text {
+    margin: 0;
+    max-width: 32ch;
+    font-size: clamp(1rem, 4.6vw, 1.15rem);
+    font-weight: 400;
+    line-height: 1.55;
+    text-wrap: pretty;
+    overflow-wrap: anywhere;
+  }
+
+  .note {
+    margin: 0;
+    max-width: 30ch;
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: var(--silver);
+  }
+
+  .status {
+    min-height: 1.3em;
+  }
+
+  .text-input {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 44px;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--silver-deep);
+    border-radius: 0;
+    background: transparent;
+    color: var(--white);
+    font-family: var(--font-body);
+    /* 16px or more keeps iOS from zooming into the field. */
+    font-size: 1rem;
+  }
+
+  .text-input::placeholder { color: var(--silver-deep); }
+
+  .text-area {
+    min-height: 9.5em;
+    line-height: 1.5;
+    resize: vertical;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    box-sizing: border-box;
+    padding: 0.7rem 1.5rem;
+    border: 1px solid var(--white);
+    border-radius: 0;
+    background: var(--white);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 0.78rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .btn:hover:not(:disabled) { background: transparent; color: var(--white); }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: progress;
+  }
+
+  .btn--ghost { background: transparent; color: var(--white); }
+  .btn--ghost:hover:not(:disabled) { background: var(--white); color: var(--ink); }
+
+  .btn:focus-visible,
+  .text-input:focus-visible {
+    outline: 2px solid var(--silver);
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .btn { transition: none; }
+  }
+</style>
+
+<canvas class="sky" id="sky" aria-hidden="true"></canvas>
+
+<main class="page">
+  <section class="panel" aria-labelledby="pageTitle">
+    <svg class="icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <path d="M24 40s-14-8.6-14-19a8 8 0 0 1 14-5.3A8 8 0 0 1 38 21c0 10.4-14 19-14 19z"/>
+    </svg>
+    <h1 class="heading" id="pageTitle">Mensaje</h1>
+    <hr class="rule">
+
+    <form class="form" id="messageForm" hidden>
+      <p class="lead" id="greeting"></p>
+      <label class="label" for="message">Sumá un mensaje bonito para Morena</label>
+      <textarea class="text-input text-area" id="message" maxlength="300" rows="6" placeholder="Escribile unas palabras…" aria-describedby="charCount"></textarea>
+      <p class="note" id="charCount" aria-live="polite"></p>
+      <p class="note" id="previousNote" hidden>Ya nos dejaste un mensaje. Podés cambiarlo.</p>
+      <button class="btn" type="submit" id="sendBtn">Enviar mensaje</button>
+    </form>
+
+    <p class="body-text status" id="status" role="status" aria-live="polite">Buscando tu invitación…</p>
+  </section>
+
+  <a class="btn btn--ghost" id="backLink" href="https://more-0512.my.canva.site/">Volver a la invitación</a>
+</main>
+
+<script>
+  (function () {
+    // Everything Pablo may need to edit lives here. rsvpEndpoint is the same Apps Script web app as in
+    // prototype/confirm.html; maxLength must match MESSAGE_MAX in tools/rsvp/Code.gs.
+    var CONFIG = {
+      rsvpEndpoint: "https://script.google.com/macros/s/AKfycbz3iqdoMqdVtff6sPIFhYT0QN-lI9pV0HirpqZe7LnwdXNi5vHUqyVgEvgtpBftzA6HTg/exec",
+      invitationUrl: "https://more-0512.my.canva.site/",
+      maxLength: 300
+    };
+
+    var STORAGE_KEY = "xvMorenaGuestId";
+    var NO_GUEST = "Para dejar un mensaje, abrí la invitación desde el link que te llegó por WhatsApp.";
+    var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    function byId(id) { return document.getElementById(id); }
+
+    var form = byId("messageForm");
+    var status = byId("status");
+    var field = byId("message");
+    var sendBtn = byId("sendBtn");
+    byId("backLink").href = CONFIG.invitationUrl;
+    field.maxLength = CONFIG.maxLength;
+
+    var guest = null;
+
+    // ?id= wins (handy for testing); otherwise the id the guest's envelope stored on this origin.
+    function readGuestId() {
+      var id = "";
+      try {
+        id = new URLSearchParams(window.location.search).get("id") || "";
+      } catch (e) {
+        id = "";
+      }
+      if (!id) {
+        try {
+          id = window.localStorage.getItem(STORAGE_KEY) || "";
+        } catch (e) {
+          id = "";
+        }
+      }
+      return id.trim().slice(0, 80);
+    }
+
+    // The sheet may hold names in any case; show them as "Familia De La Fuente".
+    function titleCase(name) {
+      return String(name || "").trim().toLowerCase().replace(/(^|[\s-])(\S)/g, function (m, sep, ch) {
+        return sep + ch.toUpperCase();
+      });
+    }
+
+    function setStatus(text) {
+      status.textContent = text;
+    }
+
+    function showNoGuest() {
+      form.hidden = true;
+      setStatus(NO_GUEST);
+    }
+
+    // Plain requests only (GET, or POST with a text/plain body) so the browser sends no CORS preflight.
+    function request(query, options) {
+      if (!CONFIG.rsvpEndpoint) return Promise.reject(new Error("No endpoint configured"));
+      var controller = window.AbortController ? new AbortController() : null;
+      var timer = controller ? setTimeout(function () { controller.abort(); }, 20000) : 0;
+      if (controller) options.signal = controller.signal;
+      var url = CONFIG.rsvpEndpoint;
+      if (query) url += (url.indexOf("?") === -1 ? "?" : "&") + query;
+      return fetch(url, options).then(function (response) {
+        clearTimeout(timer);
+        if (!response.ok) throw new Error("HTTP " + response.status);
+        return response.json();
+      }, function (error) {
+        clearTimeout(timer);
+        throw error;
+      });
+    }
+
+    function renderCount() {
+      var left = CONFIG.maxLength - field.value.length;
+      byId("charCount").textContent = left === 1 ? "Queda 1 carácter" : "Quedan " + left + " caracteres";
+      sendBtn.disabled = !field.value.trim();
+    }
+
+    function showForm(data) {
+      guest = { id: data.id, name: data.name };
+      var previous = typeof data.message === "string" ? data.message : "";
+      field.value = previous.slice(0, CONFIG.maxLength);
+      byId("previousNote").hidden = !previous;
+      byId("greeting").textContent = "Hola, " + titleCase(guest.name);
+      renderCount();
+      setStatus("");
+      form.hidden = false;
+    }
+
+    field.addEventListener("input", function () {
+      byId("previousNote").hidden = true;
+      renderCount();
+    });
+
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+      var message = field.value.trim();
+      if (!guest || !message || sendBtn.disabled) return;
+      sendBtn.disabled = true;
+      setStatus("Guardando tu mensaje…");
+      request("", {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "message", id: guest.id, message: message })
+      }).then(function (data) {
+        if (data && data.ok) {
+          form.hidden = true;
+          setStatus("¡Gracias! Tu mensaje le va a llegar a Morena. 💕");
+          return;
+        }
+        if (data && data.error === "not_found") {
+          showNoGuest();
+          return;
+        }
+        throw new Error(data && data.error ? data.error : "Unexpected response");
+      }).catch(function () {
+        renderCount();
+        setStatus("No pudimos guardar tu mensaje. Probá de nuevo en un rato.");
+      });
+    });
+
+    var guestId = readGuestId();
+    if (!guestId) {
+      showNoGuest();
+    } else {
+      request("id=" + encodeURIComponent(guestId), { method: "GET" }).then(function (data) {
+        if (data && data.ok) showForm(data);
+        else if (data && data.error === "not_found") showNoGuest();
+        else throw new Error(data && data.error ? data.error : "Unexpected response");
+      }).catch(function () {
+        setStatus("No pudimos cargar tu invitación. Probá de nuevo en un rato.");
+      });
+    }
+
+    // Sparkle sky: twinkling points and a few four-point glints on a fixed canvas behind the page.
+    var canvas = byId("sky");
+    var ctx = canvas.getContext && canvas.getContext("2d");
+    if (!ctx) return;
+    var stars = [];
+    var width = 0;
+    var height = 0;
+
+    function seed() {
+      var ratio = Math.min(window.devicePixelRatio || 1, 2);
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = Math.round(width * ratio);
+      canvas.height = Math.round(height * ratio);
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      var starCount = Math.round(Math.min(120, (width * height) / 6000));
+      stars = [];
+      for (var i = 0; i < starCount; i++) {
+        stars.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          r: Math.random() * 1.1 + 0.3,
+          glint: Math.random() < 0.12,
+          phase: Math.random() * Math.PI * 2,
+          speed: 0.6 + Math.random() * 1.4
+        });
+      }
+    }
+
+    function draw(time) {
+      ctx.clearRect(0, 0, width, height);
+      var t = time / 1000;
+      stars.forEach(function (star) {
+        var a = reduceMotion ? 0.6 : 0.25 + 0.75 * Math.abs(Math.sin(star.phase + t * star.speed));
+        ctx.globalAlpha = a;
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+        ctx.fill();
+        if (star.glint) {
+          var len = 4 + 6 * a;
+          ctx.strokeStyle = "#ffffff";
+          ctx.lineWidth = 0.8;
+          ctx.beginPath();
+          ctx.moveTo(star.x - len, star.y);
+          ctx.lineTo(star.x + len, star.y);
+          ctx.moveTo(star.x, star.y - len);
+          ctx.lineTo(star.x, star.y + len);
+          ctx.stroke();
+        }
+      });
+      ctx.globalAlpha = 1;
+      if (!reduceMotion) requestAnimationFrame(draw);
+    }
+
+    seed();
+    var resizeTimer = 0;
+    window.addEventListener("resize", function () {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function () {
+        seed();
+        if (reduceMotion) draw(0);
+      }, 150);
+    });
+    if (reduceMotion) draw(0);
+    else requestAnimationFrame(draw);
+  })();
+</script>
