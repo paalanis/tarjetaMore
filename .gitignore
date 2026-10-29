@@ -6,3 +6,6 @@
 node_modules/
 out/
 *.gsheet
+
+# Bulk-send key (tools/send-invites.mjs): never commit it.
+.send-key

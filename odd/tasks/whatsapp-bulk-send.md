@@ -1,0 +1,61 @@
+# WhatsApp bulk send of the guest envelopes
+
+Objective: one local script sends every family its envelope link by WhatsApp Web, unattended. Branch
+`feat/whatsapp-invite-site`; delivery `exception-ok` (personal project, GitHub Pages from the branch);
+tests with `npm test` (`node --test`).
+
+## Specs
+
+- S1 Families need not be saved as contacts. Pablo: "No tenemos toda la agenda guardada en el teléfono. La
+  agenda, de la lista del Excel, hay algunos que están agendados y otros que no. ¿Cómo resolvemos este
+  escenario? De la forma más automatizada posible. Se me ocurre un script, arranca el script y hace todo el
+  trabajo solo." Chats open by number through `web.whatsapp.com/send?phone=`; phones such as `2613829997`
+  become `5492613829997`.
+- S2 The script presses Enter itself. Pablo: "la uno se puede automatizar? que enter lo haga solo?"
+- S3 One fixed message, written in the sheet. Pablo: "el tema de mensaje no lo hacemos dedicado si no uno
+  fijo a definir." and "El mensaje a definir lo podemos dejar a escribir en el excel, asi cuando me siente
+  con Vale, la mama de More lo escribo." Each family's envelope link is added to it.
+- S4 Random pauses. Pablo asked "uno a los 2 segundos, el siguiente a los 3, vuelva a un segundo, algo
+  random como maximo 5 segundos"; after the ban-risk explanation he accepted the parent's proposal of 20 to
+  60 seconds at random, with a rest of about 5 minutes every 20 messages ("si").
+- S5 (parent safeguards, accepted with "Me gusta") test first with 2 families (`pablo-alanis`,
+  `romina-gonzalez`); mark each send in the sheet so a rerun resumes without repeats; stop on anything
+  unexpected.
+- S6 (assumption, required by the public repo and endpoint) phones are only returned with a secret key
+  kept in the script properties and in a local ignored file.
+
+## Tasks
+
+- [x] T1 `Code.gs`: secret-key actions `send-list` (message, id, name, phone, sent) and `mark-sent`; sheet
+  column `Enviado` and tab `Mensaje`. S3, S5, S6. Route: inline.
+- [x] T2 `tools/send-invites.mjs` (`npm run send`): phone normalization, message composition, pacing,
+  WhatsApp Web through Playwright with a persistent Chrome profile, `--dry-run` and `--only`. S1-S5.
+  Route: inline.
+- [ ] T3 Pablo adds `Enviado`, the `Mensaje` tab and the key, redeploys, scans the QR and runs the test with
+  2 families; then the full run. Route: inline (Pablo).
+
+## Log
+
+- L1 (2026-10-29) Pablo: "El tema es el siguiente. No tenemos toda la agenda guardada en el teléfono. La
+  agenda, de la lista del Excel, hay algunos que están agendados y otros que no. ¿Cómo resolvemos este
+  escenario? De la forma más automatizada posible. Se me ocurre un script, arranca el script y hace todo el
+  trabajo solo."
+- L2 Options given: assisted (Pablo presses Enter), fully automatic (ban risk on his personal number),
+  official Business API (heavy). Pablo first picked the API by mistake ("no no"), then asked for Enter to be
+  automatic. Sending number (personal or a spare one) is still open; it does not change the code.
+- L3 Pablo: "Me gusta, el tema de mensaje no lo hacemos dedicado si no uno fijo a definir. podes armar que
+  se envien uno a los 2 segundos, el siguiente a los 3, vuelva a un segundo, algo random como maximo 5
+  segundos." Parent pushed back (1-5 s is a spam pattern; an unattended run costs nothing extra in time) and
+  proposed 20-60 s; Pablo: "si. El mensaje a definir lo podemos dejar a escribir en el excel, asi cuando me
+  siente con Vale, la mama de More lo escribo."
+- L4 T1: RED 5 of 34 (send actions missing), GREEN 34/34. `telefono` and `Enviado` are mapped only for the
+  send actions, so the RSVP page keeps working if `Enviado` is missing; a key shorter than 16 characters or
+  unset refuses everything. Risk: item 2 (the key is the only thing between the public endpoint and the
+  phones).
+- L5 T2: written before its tests (no RED observed for T2); 45/45. Mutations all caught: 1-5 s pauses,
+  resending sent families, loose phone length, no key check, short key accepted. The resend mutation first
+  hung because main opened a real Chrome; main now takes `openBrowser` and the tests pass a guard that
+  throws (the leftover test Chrome and its empty `~/.tarjetamore-whatsapp` profile were removed). Scratch
+  smoke against a fake WhatsApp Web: login wait, text with accents/emoji/link sent and composer cleared,
+  invalid number stops in under 10 s, an unsent message stops. Real WhatsApp Web selectors are unproven
+  until T3's two-family run. Local `.send-key` created (ignored by git).
