@@ -89,3 +89,11 @@ tests with `npm test` (`node --test`).
   with Pablo's message `{link} Te invito a mi fiestita!!` and the sheet cleaned, `--only
   pablo-alanis,romina-gonzalez` sent both (34 s pause between them) and marked `Enviado`; a dry run now lists
   only the other 4 families. Pending: the full `npm run send` when Pablo decides.
+- L11 (2026-10-29) Pablo: "Hay un tema con la vista previa, no alcanza a  cargarla". Reproduced on WhatsApp
+  Web without sending: the preview card (`compose-box-link-preview`, thumbnail `img` inside
+  `link-preview-container`) shows 7-8 s after the chat opens, but `sendOne` sent after a fixed 6 s. Fix: poll
+  with `page.evaluate` until the preview image has loaded (45 s limit; on timeout the run stops and nothing
+  is sent). `page.waitForFunction` was tried first and fails at once on WhatsApp ("EvalError ... 'unsafe-eval'"
+  from its Content Security Policy); the fake chat now carries the same CSP. Fake smoke 10/10 (new: preview
+  present at send time, no preview stops with nothing sent); before the fix the no-preview case fails.
+  Real no-send check: preview image loaded after 7 s. `npm test` 52/52.

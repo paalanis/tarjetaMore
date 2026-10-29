@@ -13,8 +13,8 @@
 //   npm run send -- --dry-run                       list what would be sent; no browser, no writes
 //   npm run send -- --only pablo-alanis,romina-gonzalez   send to these ids only (still skips sent ones)
 //
-// Anything unexpected (an invalid phone in the sheet, a chat that does not open, a message that does not
-// show as sent) stops the run; families already sent stay marked.
+// Anything unexpected (an invalid phone in the sheet, a chat that does not open, a link preview that does
+// not load, a message that does not show as sent) stops the run; families already sent stay marked.
 import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -39,7 +39,10 @@ const SELECTORS = {
     'footer :is(button, [role="button"]):has([data-icon="send"], [data-icon="wds-ic-send-filled"])',
   ].join(", "),
   conversation: "#main",
+  // The link preview card WhatsApp builds above the box; it took about 8 s on a real run.
+  previewImage: 'footer [data-testid="compose-box-link-preview"] [data-testid="link-preview-container"] img',
 };
+const PREVIEW_TIMEOUT = 45_000;
 
 export class SendError extends Error {}
 
@@ -128,9 +131,10 @@ export const fetchSendList = (endpoint, key, fetchImpl = fetch) =>
 export const markSent = (endpoint, key, id, fetchImpl = fetch) =>
   call(endpoint, { action: "mark-sent", key, id }, fetchImpl);
 
-// Opens the chat with the text typed in, sends it with Enter (or the send button when Enter leaves the text
-// in the box) and waits until the family's link shows in the conversation. Throws SendError when the number
-// is not on WhatsApp or the page does not behave as expected.
+// Opens the chat with the text typed in, waits for the link preview, sends it with Enter (or the send button
+// when Enter leaves the text in the box) and waits until the family's link shows in the conversation. Throws
+// SendError when the number is not on WhatsApp, the preview does not load, or the page does not behave as
+// expected.
 export async function sendOne(page, item, { whatsappUrl = WHATSAPP_URL } = {}) {
   await page.goto(`${whatsappUrl}/send?phone=${item.phone}&text=${encodeURIComponent(item.text)}`);
   const composer = page.locator(SELECTORS.composer).last();
@@ -141,9 +145,12 @@ export async function sendOne(page, item, { whatsappUrl = WHATSAPP_URL } = {}) {
   ]).catch(() => "timeout");
   if (opened === "popup") fail(`${item.id}: WhatsApp did not open the chat for ${item.phone} (number not on WhatsApp?)`);
   if (opened === "timeout") fail(`${item.id}: the chat did not open within a minute`);
-  // Let the link preview load so it goes out with the message.
-  await page.waitForTimeout(6_000);
   if (!(await composer.innerText()).includes(item.link)) fail(`${item.id}: the message was not typed into the chat box`);
+  // Wait for the link preview, image loaded, so the envelope goes out with the message.
+  if (!(await previewLoaded(page, PREVIEW_TIMEOUT))) {
+    fail(`${item.id}: the link preview did not load within ${PREVIEW_TIMEOUT / 1000} s; nothing was sent`);
+  }
+  await page.waitForTimeout(1_000);
   await composer.click();
   await composer.press("Enter");
   if (!(await boxEmptied(composer, 5_000))) {
@@ -159,6 +166,18 @@ export async function sendOne(page, item, { whatsappUrl = WHATSAPP_URL } = {}) {
   // The link text shows in the conversation once the message is out of the box.
   await page.locator(SELECTORS.conversation).getByText(item.link).last().waitFor({ timeout: 30_000 })
     .catch(() => fail(`${item.id}: the message did not show as sent; check that chat before running again`));
+}
+
+// Polled with evaluate: WhatsApp's Content Security Policy blocks page.waitForFunction.
+async function previewLoaded(page, timeout) {
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    const loaded = await page.evaluate((selector) => [...document.querySelectorAll(selector)]
+      .some((img) => img.complete && img.naturalWidth > 0), SELECTORS.previewImage).catch(() => false);
+    if (loaded) return true;
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  return false;
 }
 
 async function boxEmptied(composer, timeout) {
