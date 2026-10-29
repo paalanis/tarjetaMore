@@ -31,7 +31,7 @@ tests with `npm test` (`node --test`).
 - [x] T2 `tools/send-invites.mjs` (`npm run send`): phone normalization, message composition, pacing,
   WhatsApp Web through Playwright with a persistent Chrome profile, `--dry-run` and `--only`. S1-S5.
   Route: inline.
-- [ ] T3 Pablo adds `Enviado`, the `Mensaje` tab and the key, redeploys, scans the QR and runs the test with
+- [x] T3 Pablo adds `Enviado`, the `Mensaje` tab and the key, redeploys, scans the QR and runs the test with
   2 families; then the full run. Route: inline (Pablo).
 
 ## Log
@@ -107,3 +107,5 @@ tests with `npm test` (`node --test`).
   advisories only (the preview must have an image; the preview wait is untested in the repo). Pablo ran the
   full send (`npm run send`): 4 of 4 sent and marked (Pablo Alanis, Romina Gonzalez, Julieta Gil, Joel
   Mangione); a dry run reports nothing left to send.
+- L14 (2026-10-29) Pablo: "Anduvo perfecto!" The envelopes arrived with their preview. T3 closed; the feature is
+  done.
