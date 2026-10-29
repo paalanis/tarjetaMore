@@ -85,3 +85,7 @@ tests with `npm test` (`node --test`).
   `filter({ visible })` (silently ignored), so the button is picked by a loop over visible matches. Scratch
   fake (starting-chat popup, delayed composer, hidden decoy button): Enter path, button fallback, nothing
   sends, no prefill, invalid number and diagnostics content all pass 7/7; `npm test` 45/45.
+- L10 Real run after the fixes: `--only pablo-alanis` sent and marked; Pablo confirmed through the link. Then
+  with Pablo's message `{link} Te invito a mi fiestita!!` and the sheet cleaned, `--only
+  pablo-alanis,romina-gonzalez` sent both (34 s pause between them) and marked `Enviado`; a dry run now lists
+  only the other 4 families. Pending: the full `npm run send` when Pablo decides.
