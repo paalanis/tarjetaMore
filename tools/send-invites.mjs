@@ -31,6 +31,8 @@ const SELECTORS = {
   loggedIn: "#side",
   composer: 'footer div[contenteditable="true"]',
   popup: '[data-animate-modal-popup="true"], div[role="dialog"]',
+  // Only a popup with this text means a bad number; "Iniciando chat…" shows in the same popup first.
+  invalidNumber: /válido|valid/i,
   outgoing: "div.message-out",
 };
 
@@ -127,7 +129,8 @@ export async function sendOne(page, item, { whatsappUrl = WHATSAPP_URL } = {}) {
   const composer = page.locator(SELECTORS.composer).last();
   const opened = await Promise.race([
     composer.waitFor({ timeout: 60_000 }).then(() => "chat"),
-    page.locator(SELECTORS.popup).first().waitFor({ timeout: 60_000 }).then(() => "popup"),
+    page.locator(SELECTORS.popup).filter({ hasText: SELECTORS.invalidNumber }).first()
+      .waitFor({ timeout: 60_000 }).then(() => "popup"),
   ]).catch(() => "timeout");
   if (opened === "popup") fail(`${item.id}: WhatsApp did not open the chat for ${item.phone} (number not on WhatsApp?)`);
   if (opened === "timeout") fail(`${item.id}: the chat did not open within a minute`);

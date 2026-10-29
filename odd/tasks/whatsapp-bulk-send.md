@@ -70,3 +70,9 @@ tests with `npm test` (`node --test`).
   goes out but `mark-sent` fails, the run stops and a rerun would send that family again (no retry of the
   mark); the outgoing-message count proves display, not delivery; a generic `role="dialog"` could stop the run
   on an unrelated WhatsApp dialog (a safe false stop); `send-list` duplicate/empty ids as above.
+- L8 T3 first real run (`--only pablo-alanis,romina-gonzalez`): QR scanned, then "pablo-alanis: WhatsApp did
+  not open the chat for 5492613829997 (number not on WhatsApp?)"; nothing sent or marked. Cause: the
+  "Iniciando chat…" popup that WhatsApp Web shows while opening a `send?phone=` link matched the generic
+  popup selector (the L7 advisory). Fix: only a popup whose text matches /válido|valid/i counts as a bad
+  number. Scratch fake WhatsApp now shows that popup and adds the composer only after it: the old code fails
+  with Pablo's exact message, the fix passes 6/6; `npm test` 45/45.
