@@ -11,7 +11,11 @@ import { slugify } from "../sheet-guests.mjs";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const source = readFileSync(join(root, "tools", "rsvp", "Code.gs"), "utf8");
 
-const HEADER = ["id", "nombre", "telefono", "cantidadInvitados", "Confirmado", "fechaConfirmacion"];
+const HEADER = [
+  "id", "nombre", "telefono", "cantidadInvitados", "Confirmado", "fechaConfirmacion",
+  "celiacos", "vegetarianos", "veganos", "otraRestriccion",
+];
+const NO_DIET = { celiac: null, vegetarian: null, vegan: null, otherDiet: "" };
 
 // Loads Code.gs over a copy of rows. `busy` makes the script lock time out.
 function loadScript(rows, { busy = false } = {}) {
@@ -50,10 +54,10 @@ function loadScript(rows, { busy = false } = {}) {
 
 const sampleRows = () => [
   HEADER,
-  ["", "Familia Pérez", "5490000001", 4, "", ""],
-  ["tia-ana", " Tía Ana Gómez ", "5490000002", 2, 1, "2026-10-01"],
-  ["", "", "5490000003", 3, "", ""],
-  ["", "José Núñez", "5490000004", 1, "", ""],
+  ["", "Familia Pérez", "5490000001", 4, "", "", "", "", "", ""],
+  ["tia-ana", " Tía Ana Gómez ", "5490000002", 2, 1, "2026-10-01", 1, 0, 0, "Sin lactosa"],
+  ["", "", "5490000003", 3, "", "", "", "", "", ""],
+  ["", "José Núñez", "5490000004", 1, "", "", "", "", "", ""],
 ];
 
 test("list fills empty ids from nombre and returns only {id, name} in sheet order", () => {
@@ -78,7 +82,7 @@ test("list never returns telefono, cantidadInvitados or Confirmado", () => {
   const result = loadScript(sampleRows()).get({ action: "list" });
   for (const guest of result.guests) assert.deepEqual(Object.keys(guest).sort(), ["id", "name"]);
   const text = JSON.stringify(result);
-  for (const leak of ["549000", "telefono", "cantidad", "Confirmado", "max", "confirmed", "2026-10-01"]) {
+  for (const leak of ["549000", "telefono", "cantidad", "Confirmado", "max", "confirmed", "2026-10-01", "lactosa"]) {
     assert.ok(!text.includes(leak), `list leaks ${leak}`);
   }
 });
@@ -95,9 +99,9 @@ test("list lowercases typed ids without rewriting them, and ?id= answers with th
 test("list with a duplicate id returns duplicate_id and leaves the sheet unchanged", () => {
   const rows = [
     HEADER,
-    ["", "Familia Pérez", "5490000001", 2, "", ""],
-    ["", "José Núñez", "5490000002", 1, "", ""],
-    ["FAMILIA-PEREZ", "Otra Familia", "5490000003", 2, "", ""],
+    ["", "Familia Pérez", "5490000001", 2, "", "", "", "", "", ""],
+    ["", "José Núñez", "5490000002", 1, "", "", "", "", "", ""],
+    ["FAMILIA-PEREZ", "Otra Familia", "5490000003", 2, "", "", "", "", "", ""],
   ];
   const script = loadScript(rows);
   assert.deepEqual(script.get({ action: "list" }), { ok: false, error: "duplicate_id", ids: ["familia-perez"] });
@@ -108,8 +112,8 @@ test("list with a duplicate id returns duplicate_id and leaves the sheet unchang
 test("list with a nombre that slugifies to nothing returns empty_id and leaves the sheet unchanged", () => {
   const rows = [
     HEADER,
-    ["", "Familia Pérez", "5490000001", 2, "", ""],
-    ["", "!!!", "5490000002", 2, "", ""],
+    ["", "Familia Pérez", "5490000001", 2, "", "", "", "", "", ""],
+    ["", "!!!", "5490000002", 2, "", "", "", "", "", ""],
   ];
   const script = loadScript(rows);
   assert.deepEqual(script.get({ action: "list" }), { ok: false, error: "empty_id", rows: [3] });
@@ -119,8 +123,11 @@ test("list with a nombre that slugifies to nothing returns empty_id and leaves t
 test("doGet ?id= finds rows case-insensitively, including rows whose id cell is still empty", () => {
   const script = loadScript(sampleRows());
   assert.deepEqual(script.get({ id: "Familia-Perez" }),
-    { ok: true, id: "familia-perez", name: "Familia Pérez", max: 4, confirmed: null });
-  assert.deepEqual(script.get({ id: " tia-ana " }), { ok: true, id: "tia-ana", name: "Tía Ana Gómez", max: 2, confirmed: 1 });
+    { ok: true, id: "familia-perez", name: "Familia Pérez", max: 4, confirmed: null, ...NO_DIET });
+  assert.deepEqual(script.get({ id: " tia-ana " }), {
+    ok: true, id: "tia-ana", name: "Tía Ana Gómez", max: 2, confirmed: 1,
+    celiac: 1, vegetarian: 0, vegan: 0, otherDiet: "Sin lactosa",
+  });
   assert.deepEqual(script.get({ id: "nadie" }), { ok: false, error: "not_found" });
   assert.deepEqual(script.get({}), { ok: false, error: "not_found" });
   assert.deepEqual(script.grid, sampleRows(), "lookups never write");
@@ -143,13 +150,56 @@ test("doPost rejects counts outside 0..max, unknown ids and bad bodies without w
 test("doPost saves a valid count and the confirmation date on the guest's row only", () => {
   const script = loadScript(sampleRows());
   assert.deepEqual(script.post({ id: "FAMILIA-PEREZ", count: 4 }),
-    { ok: true, id: "familia-perez", name: "Familia Pérez", max: 4, confirmed: 4 });
+    { ok: true, id: "familia-perez", name: "Familia Pérez", max: 4, confirmed: 4,
+      celiac: 0, vegetarian: 0, vegan: 0, otherDiet: "" });
   assert.deepEqual(script.post({ id: "tia-ana", count: 0 }),
-    { ok: true, id: "tia-ana", name: "Tía Ana Gómez", max: 2, confirmed: 0 });
+    { ok: true, id: "tia-ana", name: "Tía Ana Gómez", max: 2, confirmed: 0,
+      celiac: 0, vegetarian: 0, vegan: 0, otherDiet: "" });
   assert.equal(script.grid[1][4], 4);
   assert.equal(Object.prototype.toString.call(script.grid[1][5]), "[object Date]");
   assert.equal(script.grid[2][4], 0);
+  assert.deepEqual(script.grid[2].slice(6), [0, 0, 0, ""], "a body without dietary fields clears them");
   assert.deepEqual(script.grid[4], sampleRows()[4]);
+  assert.equal(script.held(), 0);
+});
+
+test("doPost saves dietary counts and the other-restriction text on the guest's row", () => {
+  const script = loadScript(sampleRows());
+  const body = { id: "familia-perez", count: 3, celiac: 1, vegetarian: 3, vegan: 0, otherDiet: "  Alergia   al maní " };
+  assert.deepEqual(script.post(body), {
+    ok: true, id: "familia-perez", name: "Familia Pérez", max: 4, confirmed: 3,
+    celiac: 1, vegetarian: 3, vegan: 0, otherDiet: "Alergia al maní",
+  });
+  assert.deepEqual(script.grid[1].slice(6), [1, 3, 0, "Alergia al maní"]);
+  assert.deepEqual(script.get({ id: "familia-perez" }).otherDiet, "Alergia al maní");
+  assert.deepEqual(script.grid[2], sampleRows()[2]);
+});
+
+test("doPost stores other-restriction text that looks like a formula as plain text", () => {
+  const script = loadScript(sampleRows());
+  for (const text of ["=IMPORTXML(\"x\")", "+1", "-2", "@a"]) {
+    assert.equal(script.post({ id: "familia-perez", count: 1, otherDiet: text }).ok, true, text);
+    assert.equal(script.grid[1][9], "'" + text, text);
+  }
+  for (const text of ["1 sin sal", "Alergia a la nuez", "3 kosher"]) {
+    assert.equal(script.post({ id: "familia-perez", count: 1, otherDiet: text }).ok, true, text);
+    assert.equal(script.grid[1][9], text, "ordinary text is stored as typed");
+  }
+});
+
+test("doPost rejects dietary values outside 0..count or a bad text without writing", () => {
+  const script = loadScript(sampleRows());
+  const bad = [
+    { celiac: 3 }, { vegetarian: -1 }, { vegan: 1.5 }, { celiac: "1" }, { vegan: null },
+    { otherDiet: 7 }, { otherDiet: "x".repeat(201) },
+  ];
+  for (const extra of bad) {
+    assert.deepEqual(script.post({ id: "familia-perez", count: 2, ...extra }), { ok: false, error: "invalid_diet" },
+      JSON.stringify(extra));
+  }
+  assert.deepEqual(script.post({ id: "tia-ana", count: 0, celiac: 1 }), { ok: false, error: "invalid_diet" });
+  assert.deepEqual(script.post({ id: "familia-perez", count: 9, celiac: 0 }), { ok: false, error: "invalid_count" });
+  assert.deepEqual(script.grid, sampleRows());
   assert.equal(script.held(), 0);
 });
 

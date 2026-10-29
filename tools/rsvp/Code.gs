@@ -7,21 +7,31 @@
 // same /exec URL serves the new code. A brand-new deployment would get a different URL.
 //
 // Row 1 holds the headers, looked up by name: id, nombre, telefono, cantidadInvitados, Confirmado,
-// fechaConfirmacion. A row's id is the guest page slug, always answered in lowercase and looked up
+// fechaConfirmacion, celiacos, vegetarianos, veganos, otraRestriccion. A row's id is the guest page slug, always answered in lowercase and looked up
 // case-insensitively. When the `id` cell is empty it is computed from `nombre` with the same slugify as
 // tools/sheet-guests.mjs, e.g. "Familia Pérez" -> "familia-perez", and a successful list action writes it
 // back into the cell. Rows with an empty `nombre` are ignored. The phone is never returned. Tests:
 // tools/test/code-gs.test.mjs (`npm test`).
 //
-// GET  ?id=<slug>                      -> {ok, id, name, max, confirmed}
+// GET  ?id=<slug>                      -> {ok, id, name, max, confirmed, celiac, vegetarian, vegan, otherDiet}
 // GET  ?action=list                    -> {ok, guests: [{id, name}]} in sheet order, for the site build;
 //                                         {ok: false, error: "duplicate_id", ids} when two rows share an id
 //                                         and {ok: false, error: "empty_id", rows} when a nombre slugifies
 //                                         to nothing.
-// POST {"id": "<slug>", "count": <n>}  -> same shape as GET ?id= after saving; sent as text/plain to avoid a
-//                                         CORS preflight, which Apps Script web apps do not answer.
+// POST {"id": "<slug>", "count": <n>, "celiac": <n>, "vegetarian": <n>, "vegan": <n>, "otherDiet": "<text>"}
+//                                      -> same shape as GET ?id= after saving; sent as text/plain to avoid a
+//                                         CORS preflight, which Apps Script web apps do not answer. Each
+//                                         dietary count is 0..count and otherDiet at most 200 characters,
+//                                         else {ok: false, error: "invalid_diet"}. Missing dietary fields
+//                                         count as 0 and "" (pages cached before they existed).
 
-var HEADERS = ["id", "nombre", "cantidadInvitados", "Confirmado", "fechaConfirmacion"];
+var HEADERS = [
+  "id", "nombre", "cantidadInvitados", "Confirmado", "fechaConfirmacion",
+  "celiacos", "vegetarianos", "veganos", "otraRestriccion"
+];
+// Dietary counts: request/response field -> sheet column.
+var DIET_COUNTS = { celiac: "celiacos", vegetarian: "vegetarianos", vegan: "veganos" };
+var OTHER_DIET_MAX = 200;
 
 function doGet(e) {
   var params = e && e.parameter ? e.parameter : {};
@@ -49,14 +59,41 @@ function doPost(e) {
     if (typeof count !== "number" || Math.floor(count) !== count || count < 0 || count > guest.max) {
       return json_({ ok: false, error: "invalid_count" });
     }
+    var diet = readDiet_(body, count);
+    if (!diet) return json_({ ok: false, error: "invalid_diet" });
     guest.sheet.getRange(guest.row, guest.cols.Confirmado + 1).setValue(count);
     guest.sheet.getRange(guest.row, guest.cols.fechaConfirmacion + 1).setValue(new Date());
+    Object.keys(DIET_COUNTS).forEach(function (field) {
+      guest.sheet.getRange(guest.row, guest.cols[DIET_COUNTS[field]] + 1).setValue(diet[field]);
+    });
+    // A leading = + - @ would make the sheet read the guest's text as a formula; the apostrophe keeps it text.
+    var otherCell = /^[=+\-@]/.test(diet.otherDiet) ? "'" + diet.otherDiet : diet.otherDiet;
+    guest.sheet.getRange(guest.row, guest.cols.otraRestriccion + 1).setValue(otherCell);
     SpreadsheetApp.flush();
     guest.confirmed = count;
+    guest.diet = diet;
     return json_(publicGuest_(guest));
   }, function () {
     return json_({ ok: false, error: "busy" });
   });
+}
+
+// The dietary answer in a POST body, or null when a value is invalid. Each count must be an integer in
+// 0..count; otherDiet is trimmed with inner whitespace collapsed.
+function readDiet_(body, count) {
+  var diet = {};
+  var fields = Object.keys(DIET_COUNTS);
+  for (var i = 0; i < fields.length; i++) {
+    var n = body[fields[i]] === undefined ? 0 : body[fields[i]];
+    if (typeof n !== "number" || Math.floor(n) !== n || n < 0 || n > count) return null;
+    diet[fields[i]] = n;
+  }
+  var other = body.otherDiet === undefined ? "" : body.otherDiet;
+  if (typeof other !== "string") return null;
+  other = other.replace(/\s+/g, " ").trim();
+  if (other.length > OTHER_DIET_MAX) return null;
+  diet.otherDiet = other;
+  return diet;
 }
 
 // Lists every guest as {id, name} only: these names are already public through the built guest pages.
@@ -106,6 +143,11 @@ function findGuest_(id) {
     var rowId = effectiveId_(row, data.cols);
     if (!rowId || rowId !== wanted) continue;
     var confirmed = row[data.cols.Confirmado];
+    var diet = {};
+    Object.keys(DIET_COUNTS).forEach(function (field) {
+      diet[field] = countCell_(row[data.cols[DIET_COUNTS[field]]]);
+    });
+    diet.otherDiet = String(row[data.cols.otraRestriccion]).trim();
     return {
       sheet: data.sheet,
       row: r + 1,
@@ -113,10 +155,16 @@ function findGuest_(id) {
       id: rowId,
       name: String(row[data.cols.nombre]).trim(),
       max: Number(row[data.cols.cantidadInvitados]) || 0,
-      confirmed: confirmed === "" || confirmed === null ? null : Number(confirmed)
+      confirmed: countCell_(confirmed),
+      diet: diet
     };
   }
   return null;
+}
+
+// A count cell as a number, or null while it is empty.
+function countCell_(value) {
+  return value === "" || value === null ? null : Number(value);
 }
 
 // Reads the first sheet and maps each required header to its column index.
@@ -163,7 +211,11 @@ function withLock_(fn, onBusy) {
 }
 
 function publicGuest_(guest) {
-  return { ok: true, id: guest.id, name: guest.name, max: guest.max, confirmed: guest.confirmed };
+  return {
+    ok: true, id: guest.id, name: guest.name, max: guest.max, confirmed: guest.confirmed,
+    celiac: guest.diet.celiac, vegetarian: guest.diet.vegetarian, vegan: guest.diet.vegan,
+    otherDiet: guest.diet.otherDiet
+  };
 }
 
 function json_(data) {

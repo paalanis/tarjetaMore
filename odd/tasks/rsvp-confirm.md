@@ -56,6 +56,15 @@ small Apps Script web app reads and writes.
   slug; committed `node --test` tests for sheet mode (real CONFIG parsing, error handling, slug checks) and
   for `Code.gs` (stubbed Apps Script services) including slugify parity with the build. Route: delegated
   writer (writer trigger: 2+ non-trivial files). Commit `8a68158`. Pablo redeploys the script afterwards.
+- [ ] T8 Dietary needs in the confirm step (2026-10-29). Pablo: "Necesito agregar en el paso de
+  confirmaciones el detalle de si la gente es celíaca o tiene algún tipo de impedimento alimenticio. Hay que
+  confirmar cuántas de las 5 personas, por ejemplo, que tienen permitido ingresar al evento o están
+  invitados al evento, van a ser celíacos." He chose per-type counters: "Celíacos", "Vegetarianos",
+  "Veganos" (each 0 up to the people attending) plus "Otra restricción (opcional)" free text. Sheet gets
+  columns `celiacos, vegetarianos, veganos, otraRestriccion`; GET returns `celiac, vegetarian, vegan,
+  otherDiet`; POST accepts them (missing means 0 / empty, for pages cached before the change) and rejects
+  out-of-range values with `invalid_diet`; the WhatsApp text lists them. Route: inline (no writer reason).
+  Pablo adds the four columns, then redeploys Code.gs as a new version.
 
 ## Acceptance criteria
 
@@ -132,8 +141,22 @@ small Apps Script web app reads and writes.
   Confirmar); the sheet read back `confirmed: 3` for `pablo-alanis`. WhatsApp previews were missing on his
   phone because of WhatsApp's own link preview setting (not even google.com showed one); fixed on his side.
 
+- T8 code done: RED 5 of 28 failed for the missing dietary fields; GREEN 28/28 after `Code.gs` (an extra
+  case pins that ordinary text starting with a digit is not prefixed, after a lost backslash turned
+  `[=+\-@]` into a range). `node --check` on Code.gs passes; `npm run build` is deterministic (the
+  regenerated `docs/og/general.jpg` differed only from the Chrome/fonts version and was restored).
+  Playwright smoke with a mocked endpoint at 360/390/430px, 42/42: steppers capped at the people attending
+  and clamped when the count drops, previous answers prefilled, POST body with the four fields, count 0
+  hides the menu and sends zeros, WhatsApp text "Menú especial: 1 celíaco, 1 vegetariano. Otra
+  restricción: alergia al maní" (plural "2 celíacos, 1 vegano"), no menu keeps the old text, no
+  horizontal scroll, no page errors.
+- Deploy order matters: the new script requires the four columns (it answers "Missing column" for every
+  request without them), and the old script ignores the new fields. So: add the columns, redeploy, then push.
+
 ## Next step
 
+- T8: Pablo adds `celiacos, vegetarianos, veganos, otraRestriccion` to row 1 of the sheet, redeploys
+  `Code.gs` as a new version, then the page is pushed and checked live.
 - Pablo clears his test answer (`pablo-alanis`, `Confirmado = 3`) before sending.
 - Bulk send (new feature, not started): parent recommended a semi-automatic "Enviar" column in the sheet
   with a per-family `wa.me` link (prefilled message with the family's envelope link; Pablo taps send), tested

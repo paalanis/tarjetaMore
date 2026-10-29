@@ -181,6 +181,73 @@
     line-height: 1;
   }
 
+  .diet {
+    box-sizing: border-box;
+    display: grid;
+    justify-items: center;
+    gap: 12px;
+    width: 100%;
+    min-width: 0;
+    margin: 4px 0 0;
+    padding: 16px 0 0;
+    border: 0;
+    border-top: 1px solid var(--panel-edge);
+  }
+
+  .diet legend {
+    padding: 0;
+    margin: 0 auto;
+  }
+
+  .diet-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .diet-name {
+    font-size: 0.95rem;
+    text-align: left;
+  }
+
+  .stepper--small { gap: 12px; }
+
+  .step--small {
+    width: 44px;
+    height: 44px;
+    font-size: 1.3rem;
+  }
+
+  .count--small {
+    font-size: 1.6rem;
+    text-align: center;
+  }
+
+  .diet-other {
+    display: grid;
+    gap: 8px;
+    width: 100%;
+    justify-items: start;
+  }
+
+  .text-input {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 44px;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--silver-deep);
+    border-radius: 0;
+    background: transparent;
+    color: var(--white);
+    font-family: var(--font-body);
+    /* 16px or more keeps iOS from zooming into the field. */
+    font-size: 1rem;
+  }
+
+  .text-input::placeholder { color: var(--silver-deep); }
+
   .btn {
     display: inline-flex;
     align-items: center;
@@ -214,7 +281,8 @@
   .btn--ghost:hover:not(:disabled) { background: var(--white); color: var(--ink); }
 
   .btn:focus-visible,
-  .step:focus-visible {
+  .step:focus-visible,
+  .text-input:focus-visible {
     outline: 2px solid var(--silver);
     outline-offset: 3px;
   }
@@ -246,6 +314,38 @@
       </div>
       <p class="note" id="maxNote"></p>
       <p class="body-text" id="countMeaning"></p>
+      <fieldset class="diet" id="dietGroup" hidden>
+        <legend class="label">Menú especial</legend>
+        <p class="note">¿Cuántos de los que asisten necesitan uno?</p>
+        <div class="diet-row">
+          <span class="diet-name" id="celiacLabel">Celíacos</span>
+          <div class="stepper stepper--small" role="group" aria-labelledby="celiacLabel">
+            <button class="step step--small" type="button" data-diet="celiac" data-delta="-1" aria-label="Un celíaco menos">−</button>
+            <output class="count count--small" id="celiacValue" aria-live="polite">0</output>
+            <button class="step step--small" type="button" data-diet="celiac" data-delta="1" aria-label="Un celíaco más">+</button>
+          </div>
+        </div>
+        <div class="diet-row">
+          <span class="diet-name" id="vegetarianLabel">Vegetarianos</span>
+          <div class="stepper stepper--small" role="group" aria-labelledby="vegetarianLabel">
+            <button class="step step--small" type="button" data-diet="vegetarian" data-delta="-1" aria-label="Un vegetariano menos">−</button>
+            <output class="count count--small" id="vegetarianValue" aria-live="polite">0</output>
+            <button class="step step--small" type="button" data-diet="vegetarian" data-delta="1" aria-label="Un vegetariano más">+</button>
+          </div>
+        </div>
+        <div class="diet-row">
+          <span class="diet-name" id="veganLabel">Veganos</span>
+          <div class="stepper stepper--small" role="group" aria-labelledby="veganLabel">
+            <button class="step step--small" type="button" data-diet="vegan" data-delta="-1" aria-label="Un vegano menos">−</button>
+            <output class="count count--small" id="veganValue" aria-live="polite">0</output>
+            <button class="step step--small" type="button" data-diet="vegan" data-delta="1" aria-label="Un vegano más">+</button>
+          </div>
+        </div>
+        <label class="diet-other">
+          <span class="diet-name">Otra restricción (opcional)</span>
+          <input class="text-input" id="otherDiet" type="text" maxlength="200" autocomplete="off" placeholder="Ej.: alergia al maní">
+        </label>
+      </fieldset>
       <p class="note" id="previousNote" hidden></p>
       <button class="btn" type="submit" id="confirmBtn">Confirmar</button>
     </form>
@@ -280,10 +380,20 @@
     var plus = byId("plus");
     var countValue = byId("countValue");
     var confirmBtn = byId("confirmBtn");
+    var dietGroup = byId("dietGroup");
+    var otherDiet = byId("otherDiet");
     byId("backLink").href = CONFIG.invitationUrl;
+
+    // Special menus: each is a count from 0 up to the people attending, saved under the same key.
+    var DIETS = [
+      { key: "celiac", one: "celíaco", many: "celíacos" },
+      { key: "vegetarian", one: "vegetariano", many: "vegetarianos" },
+      { key: "vegan", one: "vegano", many: "veganos" }
+    ];
 
     var guest = null;
     var count = 0;
+    var diet = { celiac: 0, vegetarian: 0, vegan: 0 };
 
     // ?id= wins (handy for testing); otherwise the id the guest's envelope stored on this origin.
     function readGuestId() {
@@ -314,12 +424,19 @@
       return "https://wa.me/" + CONFIG.rsvpPhone + "?text=" + encodeURIComponent(text);
     }
 
-    function answerText(n) {
-      if (!guest) return "¡Hola! Quiero confirmar mi asistencia a los XV de Morena.";
+    // answer is the POST body ({count, celiac, vegetarian, vegan, otherDiet}), or null before the guest loads.
+    function answerText(answer) {
+      if (!guest || !answer) return "¡Hola! Quiero confirmar mi asistencia a los XV de Morena.";
       var name = titleCase(guest.name);
       var signature = name ? " — " + name : "";
-      if (n === 0) return "¡Hola! Lamentablemente no vamos a poder asistir a los XV de Morena" + signature;
-      return "¡Hola! Confirmo " + n + " de " + guest.max + " lugares para los XV de Morena" + signature;
+      if (answer.count === 0) return "¡Hola! Lamentablemente no vamos a poder asistir a los XV de Morena" + signature;
+      var text = "¡Hola! Confirmo " + answer.count + " de " + guest.max + " lugares para los XV de Morena";
+      var menus = DIETS.filter(function (d) { return answer[d.key] > 0; }).map(function (d) {
+        return answer[d.key] + " " + (answer[d.key] === 1 ? d.one : d.many);
+      });
+      if (menus.length) text += ". Menú especial: " + menus.join(", ");
+      if (answer.otherDiet) text += ". Otra restricción: " + answer.otherDiet;
+      return text + signature;
     }
 
     function setStatus(text) {
@@ -363,6 +480,20 @@
       byId("countMeaning").textContent = count === 0
         ? "Con 0 nos avisás que no van a poder asistir."
         : count === 1 ? "Va a asistir 1 persona." : "Van a asistir " + count + " personas.";
+      dietGroup.hidden = count === 0;
+      DIETS.forEach(function (d) {
+        if (diet[d.key] > count) diet[d.key] = count;
+        byId(d.key + "Value").textContent = String(diet[d.key]);
+      });
+      dietGroup.querySelectorAll("[data-diet]").forEach(function (button) {
+        var value = diet[button.getAttribute("data-diet")];
+        button.disabled = button.getAttribute("data-delta") === "1" ? value >= count : value <= 0;
+      });
+    }
+
+    // A saved count, kept only when it is a whole number the stepper can show.
+    function savedCount(value, max) {
+      return typeof value === "number" && Math.floor(value) === value && value >= 0 && value <= max ? value : 0;
     }
 
     function showForm(data) {
@@ -370,6 +501,8 @@
       var previous = data.confirmed;
       var hasPrevious = typeof previous === "number" && previous >= 0 && previous <= guest.max;
       count = hasPrevious ? previous : guest.max;
+      DIETS.forEach(function (d) { diet[d.key] = savedCount(data[d.key], count); });
+      otherDiet.value = typeof data.otherDiet === "string" ? data.otherDiet : "";
       byId("greeting").textContent = "Hola, " + titleCase(guest.name);
       byId("maxNote").textContent = "Máximo " + guest.max;
       var note = byId("previousNote");
@@ -394,17 +527,33 @@
       render();
     });
 
+    dietGroup.addEventListener("click", function (event) {
+      var button = event.target.closest("[data-diet]");
+      if (!button || button.disabled) return;
+      var key = button.getAttribute("data-diet");
+      diet[key] = Math.min(count, Math.max(0, diet[key] + Number(button.getAttribute("data-delta"))));
+      render();
+    });
+
     form.addEventListener("submit", function (event) {
       event.preventDefault();
       if (!guest || confirmBtn.disabled) return;
-      var answer = count;
+      // Nobody attending means no special menus, whatever the steppers showed before reaching 0.
+      var answer = {
+        id: guest.id,
+        count: count,
+        celiac: count ? diet.celiac : 0,
+        vegetarian: count ? diet.vegetarian : 0,
+        vegan: count ? diet.vegan : 0,
+        otherDiet: count ? otherDiet.value.replace(/\s+/g, " ").trim() : ""
+      };
       confirmBtn.disabled = true;
       whatsappLink.hidden = true;
       setStatus("Guardando tu respuesta…");
       request("", {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ id: guest.id, count: answer })
+        body: JSON.stringify(answer)
       }).then(function (data) {
         if (data && data.ok) {
           setStatus("¡Listo! Abriendo WhatsApp…");
@@ -432,7 +581,7 @@
         else if (data && data.error === "not_found") showNoGuest();
         else throw new Error(data && data.error ? data.error : "Unexpected response");
       }).catch(function () {
-        showFallback("No pudimos cargar tu invitación. Avisanos por WhatsApp.", answerText(0));
+        showFallback("No pudimos cargar tu invitación. Avisanos por WhatsApp.", answerText(null));
       });
     }
 
