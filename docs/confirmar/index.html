@@ -332,7 +332,7 @@
       <p class="body-text" id="countMeaning"></p>
       <fieldset class="diet" id="dietGroup" hidden>
         <legend class="label">Menú especial</legend>
-        <p class="note">¿Cuántos de los que asisten necesitan uno?</p>
+        <p class="note">¿Cuántos de los que asisten necesitan uno? Un menú por persona: si alguien necesita más de uno, contalo en "Otra restricción".</p>
         <div class="diet-row">
           <span class="diet-name" id="celiacLabel">Celíacos</span>
           <div class="stepper stepper--small" role="group" aria-labelledby="celiacLabel">
@@ -497,14 +497,23 @@
         ? "Con 0 nos avisás que no van a poder asistir."
         : count === 1 ? "Va a asistir 1 persona." : "Van a asistir " + count + " personas.";
       dietGroup.hidden = count === 0;
-      DIETS.forEach(function (d) {
-        if (diet[d.key] > count) diet[d.key] = count;
-        byId(d.key + "Value").textContent = String(diet[d.key]);
-      });
+      // One special menu per person: when fewer people attend, the excess comes off the last menus first.
+      var excess = dietTotal() - count;
+      for (var i = DIETS.length - 1; i >= 0 && excess > 0; i--) {
+        var cut = Math.min(diet[DIETS[i].key], excess);
+        diet[DIETS[i].key] -= cut;
+        excess -= cut;
+      }
+      DIETS.forEach(function (d) { byId(d.key + "Value").textContent = String(diet[d.key]); });
+      var full = dietTotal() >= count;
       dietGroup.querySelectorAll("[data-diet]").forEach(function (button) {
         var value = diet[button.getAttribute("data-diet")];
-        button.disabled = button.getAttribute("data-delta") === "1" ? value >= count : value <= 0;
+        button.disabled = button.getAttribute("data-delta") === "1" ? full : value <= 0;
       });
+    }
+
+    function dietTotal() {
+      return DIETS.reduce(function (sum, d) { return sum + diet[d.key]; }, 0);
     }
 
     // A saved count, kept only when it is a whole number the stepper can show.
@@ -547,7 +556,9 @@
       var button = event.target.closest("[data-diet]");
       if (!button || button.disabled) return;
       var key = button.getAttribute("data-diet");
-      diet[key] = Math.min(count, Math.max(0, diet[key] + Number(button.getAttribute("data-delta"))));
+      var delta = Number(button.getAttribute("data-delta"));
+      if (delta > 0 && dietTotal() >= count) return;
+      diet[key] = Math.max(0, diet[key] + delta);
       render();
     });
 

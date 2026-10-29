@@ -20,8 +20,9 @@
 //                                         to nothing.
 // POST {"id": "<slug>", "count": <n>, "celiac": <n>, "vegetarian": <n>, "vegan": <n>, "otherDiet": "<text>"}
 //                                      -> same shape as GET ?id= after saving; sent as text/plain to avoid a
-//                                         CORS preflight, which Apps Script web apps do not answer. Each
-//                                         dietary count is 0..count and otherDiet at most 200 characters,
+//                                         CORS preflight, which Apps Script web apps do not answer. The
+//                                         dietary counts add up to at most count (one special menu per
+//                                         person) and otherDiet is at most 200 characters,
 //                                         else {ok: false, error: "invalid_diet"}. Missing dietary fields
 //                                         count as 0 and "" (pages cached before they existed).
 // POST {"action": "send-list", "key": "<SEND_KEY>"}
@@ -90,16 +91,20 @@ function doPost(e) {
   });
 }
 
-// The dietary answer in a POST body, or null when a value is invalid. Each count must be an integer in
-// 0..count; otherDiet is trimmed with inner whitespace collapsed.
+// The dietary answer in a POST body, or null when a value is invalid. Each count is a whole number and all
+// of them together are at most count: one special menu per person; otherDiet is trimmed with inner
+// whitespace collapsed.
 function readDiet_(body, count) {
   var diet = {};
   var fields = Object.keys(DIET_COUNTS);
+  var total = 0;
   for (var i = 0; i < fields.length; i++) {
     var n = body[fields[i]] === undefined ? 0 : body[fields[i]];
-    if (typeof n !== "number" || Math.floor(n) !== n || n < 0 || n > count) return null;
+    if (typeof n !== "number" || Math.floor(n) !== n || n < 0) return null;
     diet[fields[i]] = n;
+    total += n;
   }
+  if (total > count) return null;
   var other = body.otherDiet === undefined ? "" : body.otherDiet;
   if (typeof other !== "string") return null;
   other = other.replace(/\s+/g, " ").trim();

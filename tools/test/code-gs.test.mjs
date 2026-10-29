@@ -174,12 +174,12 @@ test("doPost saves a valid count and the confirmation date on the guest's row on
 
 test("doPost saves dietary counts and the other-restriction text on the guest's row", () => {
   const script = loadScript(sampleRows());
-  const body = { id: "familia-perez", count: 3, celiac: 1, vegetarian: 3, vegan: 0, otherDiet: "  Alergia   al maní " };
+  const body = { id: "familia-perez", count: 3, celiac: 1, vegetarian: 2, vegan: 0, otherDiet: "  Alergia   al maní " };
   assert.deepEqual(script.post(body), {
     ok: true, id: "familia-perez", name: "Familia Pérez", max: 4, confirmed: 3,
-    celiac: 1, vegetarian: 3, vegan: 0, otherDiet: "Alergia al maní",
+    celiac: 1, vegetarian: 2, vegan: 0, otherDiet: "Alergia al maní",
   });
-  assert.deepEqual(script.grid[1].slice(6), [1, 3, 0, "Alergia al maní"]);
+  assert.deepEqual(script.grid[1].slice(6), [1, 2, 0, "Alergia al maní"]);
   assert.deepEqual(script.get({ id: "familia-perez" }).otherDiet, "Alergia al maní");
   assert.deepEqual(script.grid[2], sampleRows()[2]);
 });
@@ -199,7 +199,7 @@ test("doPost stores other-restriction text that looks like a formula as plain te
 test("doPost rejects dietary values outside 0..count or a bad text without writing", () => {
   const script = loadScript(sampleRows());
   const bad = [
-    { celiac: 3 }, { vegetarian: -1 }, { vegan: 1.5 }, { celiac: "1" }, { vegan: null },
+    { celiac: 3 }, { celiac: 1, vegetarian: 1, vegan: 1 }, { celiac: 2, vegan: 1 }, { vegetarian: -1 }, { vegan: 1.5 }, { celiac: "1" }, { vegan: null },
     { otherDiet: 7 }, { otherDiet: "x".repeat(201) },
   ];
   for (const extra of bad) {
@@ -210,6 +210,12 @@ test("doPost rejects dietary values outside 0..count or a bad text without writi
   assert.deepEqual(script.post({ id: "familia-perez", count: 9, celiac: 0 }), { ok: false, error: "invalid_count" });
   assert.deepEqual(script.grid, sampleRows());
   assert.equal(script.held(), 0);
+});
+
+test("doPost accepts special menus that add up to exactly the people attending", () => {
+  const script = loadScript(sampleRows());
+  assert.equal(script.post({ id: "familia-perez", count: 3, celiac: 1, vegetarian: 1, vegan: 1 }).ok, true);
+  assert.deepEqual(script.grid[1].slice(6, 9), [1, 1, 1]);
 });
 
 test("a lock timeout answers busy", () => {

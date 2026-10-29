@@ -60,10 +60,10 @@ small Apps Script web app reads and writes.
   confirmaciones el detalle de si la gente es celíaca o tiene algún tipo de impedimento alimenticio. Hay que
   confirmar cuántas de las 5 personas, por ejemplo, que tienen permitido ingresar al evento o están
   invitados al evento, van a ser celíacos." He chose per-type counters: "Celíacos", "Vegetarianos",
-  "Veganos" (each 0 up to the people attending) plus "Otra restricción (opcional)" free text. Sheet gets
+  "Veganos" (together at most the people attending; one special menu per person, see the 2026-10-29 correction below) plus "Otra restricción (opcional)" free text. Sheet gets
   columns `celiacos, vegetarianos, veganos, otraRestriccion`; GET returns `celiac, vegetarian, vegan,
   otherDiet`; POST accepts them (missing means 0 / empty, for pages cached before the change) and rejects
-  out-of-range values with `invalid_diet`; the WhatsApp text lists them. Route: inline (no writer reason).
+  values that add up to more than the people attending with `invalid_diet`; the WhatsApp text lists them. Route: inline (no writer reason).
   Pablo adds the four columns, then redeploys Code.gs as a new version.
 
 ## Acceptance criteria
@@ -163,6 +163,16 @@ small Apps Script web app reads and writes.
   `celiac: 2` for `count: 1` answers `invalid_diet` with the row unchanged. Pushed `a7ac590`, `f544d9f`;
   live `/confirmar/?id=romina-gonzalez` at 390px shows the menu, caps celiacs at 2, no scroll, no page
   errors (nothing submitted).
+
+- T8 correction (2026-10-29), Pablo: "hay un bug con las comidas especiales, suman mas de la cantidad
+  total, no controla eso". The first version capped each counter at the people attending (so one person
+  could be both celiac and vegetarian); now celiacos + vegetarianos + veganos is at most the count, and a
+  person needing two goes in "Otra restricción" (note added under the menu). RED: the Code.gs test with
+  1+1+1 for count 2 and 2+1 for count 2 failed (46 tests, 1 fail); GREEN 46/46. Page: when the count drops,
+  the excess comes off the last menus first; every + is disabled once the menus fill the count; a saved
+  answer over the count is trimmed on load. The scratch smoke (51 checks, 360/390/430px) fails on the old
+  page with Pablo's case ("1 celíaco, 1 vegetariano" for 1 attendee) and passes on the new one. Needs a
+  Code.gs redeploy and a push.
 
 ## Next step
 
