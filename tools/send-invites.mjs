@@ -145,11 +145,11 @@ export async function sendOne(page, item, { whatsappUrl = WHATSAPP_URL } = {}) {
   ]).catch(() => "timeout");
   if (opened === "popup") fail(`${item.id}: WhatsApp did not open the chat for ${item.phone} (number not on WhatsApp?)`);
   if (opened === "timeout") fail(`${item.id}: the chat did not open within a minute`);
+  // Wait for the link preview, image loaded, so the envelope goes out with the message. It only shows once
+  // the text is in the box, so the typed-text check comes after it.
+  const preview = await previewLoaded(page, PREVIEW_TIMEOUT);
   if (!(await composer.innerText()).includes(item.link)) fail(`${item.id}: the message was not typed into the chat box`);
-  // Wait for the link preview, image loaded, so the envelope goes out with the message.
-  if (!(await previewLoaded(page, PREVIEW_TIMEOUT))) {
-    fail(`${item.id}: the link preview did not load within ${PREVIEW_TIMEOUT / 1000} s; nothing was sent`);
-  }
+  if (!preview) fail(`${item.id}: the link preview did not load within ${PREVIEW_TIMEOUT / 1000} s; nothing was sent`);
   await page.waitForTimeout(1_000);
   await composer.click();
   await composer.press("Enter");

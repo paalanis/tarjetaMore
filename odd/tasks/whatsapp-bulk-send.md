@@ -97,3 +97,9 @@ tests with `npm test` (`node --test`).
   from its Content Security Policy); the fake chat now carries the same CSP. Fake smoke 10/10 (new: preview
   present at send time, no preview stops with nothing sent); before the fix the no-preview case fails.
   Real no-send check: preview image loaded after 7 s. `npm test` 52/52.
+- L12 Native review of `084427d..3135bd4` (medium, granted by Pablo, lens reliability): approved and
+  acknowledged. Advisory acted on: the typed-text check ran right after the box appeared, with no wait, so a
+  late prefill would stop the run; it now runs after the preview wait (the preview only shows once the text is
+  in). New fake case "text typed in 2 s after the box": the previous code throws, the fix sends; fake smoke
+  11/11, `npm test` 52/52. Advisories left: the fake smoke lives in the session scratch, not in the repo;
+  evaluate errors during the preview wait count as "not loaded" (a safe stop after 45 s).
