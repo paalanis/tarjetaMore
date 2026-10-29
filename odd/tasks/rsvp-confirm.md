@@ -152,6 +152,11 @@ small Apps Script web app reads and writes.
   horizontal scroll, no page errors.
 - Deploy order matters: the new script requires the four columns (it answers "Missing column" for every
   request without them), and the old script ignores the new fields. So: add the columns, redeploy, then push.
+- Native review (`da487c0..a7ac590`, T8; assess said `under_budget`, the stop hook asked for it): medium,
+  granted by Pablo, lenses risk and reliability, approved, acknowledged (authority burned). Advisory
+  follow-ups: GET `?id=` now also returns the dietary answer, so anyone who guesses a slug can read it
+  (same guessable-id advisory as T2); the formula guard and the page logic are only checked by stubs and the
+  scratch Playwright smoke; the four new columns are required (deploy order above).
 
 ## Next step
 
