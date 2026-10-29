@@ -65,7 +65,7 @@ small Apps Script web app reads and writes.
   otherDiet`; POST accepts them (missing means 0 / empty, for pages cached before the change) and rejects
   values that add up to more than the people attending with `invalid_diet`; the WhatsApp text lists them. Route: inline (no writer reason).
   Pablo adds the four columns, then redeploys Code.gs as a new version.
-- [ ] T9 Message for Morena (2026-10-29). Pablo: "Tambien quiera poder usar el apartado que dice \"Suma un
+- [x] T9 Message for Morena (2026-10-29). Pablo: "Tambien quiera poder usar el apartado que dice \"Suma un
   mensaje bonito\", que se logue con en cada invitacion." and, rejecting the parent's idea of a box inside
   /confirmar/: "No, tiene que ser desde la parque que tiene la tarjeta dedicada para eso. Que sea como con
   una cantidad limitada de caracteres, si toca lo blanco para escribir mensaje se abre algo nuevo para
@@ -193,6 +193,12 @@ small Apps Script web app reads and writes.
   prefilled, failed save keeps the text, envelope-stored id used, no-id and unknown-id messages, no
   horizontal scroll, no page errors. Pablo still adds the two columns, redeploys, links the Canva white box
   to `https://paalanis.github.io/tarjetaMore/mensaje/`, and the site is pushed.
+- T9 live: pushed `7ecf62e`; live `/mensaje/?id=romina-gonzalez` greets the family with the 300 counter and
+  live `/confirmar/` blocks the vegan + after 1 celiac and 1 vegetarian for 2 attendees (no page errors,
+  nothing submitted). Pablo added `mensaje, fechaMensaje` and redeployed: GET returns `message`, a blank
+  message gives `invalid_message`, and a test message saved on `pablo-alanis` reads back exactly
+  ("Prueba de mensaje 💕 ñandú" through Node fetch; curl from Git Bash on Windows had turned the emoji into
+  "??" before sending, not the script). Pending: Pablo links the Canva white box to `/mensaje/`.
 
 ## Next step
 
