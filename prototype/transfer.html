@@ -172,6 +172,12 @@
 
   .btn:hover { background: transparent; color: var(--white); }
 
+  .actions {
+    display: grid;
+    gap: 10px;
+    width: 100%;
+  }
+
   .btn--ghost { background: transparent; color: var(--white); }
   .btn--ghost:hover { background: var(--white); color: var(--ink); }
 
@@ -201,9 +207,14 @@
     <h2 class="label">Datos para transferencia</h2>
     <dl class="data-list">
       <div><dt>Alias</dt><dd id="aliasValue"></dd></div>
+      <div><dt>CVU</dt><dd id="cvuValue"></dd></div>
       <div><dt>Titular</dt><dd id="holderValue"></dd></div>
     </dl>
-    <button class="btn" type="button" id="copyAlias">Copiar alias</button>
+    <div class="actions">
+      <button class="btn" type="button" data-copy="aliasValue" data-done="¡Alias copiado!" data-what="el alias">Copiar alias</button>
+      <button class="btn" type="button" data-copy="cvuValue" data-done="¡CVU copiado!" data-what="el CVU">Copiar CVU</button>
+      <a class="btn btn--ghost" id="mpLink" href="https://mpago.la/2KNmX3j" target="_blank" rel="noopener">Pagar con Mercado Pago</a>
+    </div>
     <p class="copy-status" id="copyStatus" role="status" aria-live="polite"></p>
   </section>
 
@@ -216,8 +227,10 @@
     // placeholders so they are easy to spot before the link is shared.
     var CONFIG = {
       invitationUrl: "https://more-0512.my.canva.site/",
-      giftAlias: "[Completar: alias]",
-      giftHolder: "[Completar: titular de la cuenta]"
+      giftAlias: "morena.sebastianelli",
+      giftCvu: "0000003100045633669138",
+      giftHolder: "Morena Pilar Sebastianelli Furlani",
+      mercadoPagoUrl: "https://mpago.la/2KNmX3j"
     };
 
     var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -231,38 +244,44 @@
     }
 
     fill("aliasValue", CONFIG.giftAlias);
+    fill("cvuValue", CONFIG.giftCvu);
     fill("holderValue", CONFIG.giftHolder);
+    byId("mpLink").href = CONFIG.mercadoPagoUrl;
     byId("backLink").href = CONFIG.invitationUrl;
 
-    // Copy alias: clipboard API inside the click handler; without it (or when it is refused) select the
-    // alias and try the legacy copy command, leaving the text selected if that fails too.
-    byId("copyAlias").addEventListener("click", function () {
-      var aliasEl = byId("aliasValue");
-      var status = byId("copyStatus");
-      function fallback() {
-        var range = document.createRange();
-        range.selectNodeContents(aliasEl);
-        var selection = window.getSelection();
-        selection.removeAllRanges();
-        selection.addRange(range);
-        var copied = false;
-        try {
-          copied = document.execCommand("copy");
-        } catch (e) {
-          copied = false;
+    // Copy buttons: each one names the element whose text it copies. Clipboard API inside the click
+    // handler; without it (or when it is refused) select the text and try the legacy copy command, leaving
+    // the text selected if that fails too.
+    Array.prototype.forEach.call(document.querySelectorAll("[data-copy]"), function (button) {
+      button.addEventListener("click", function () {
+        var source = byId(button.getAttribute("data-copy"));
+        var done = button.getAttribute("data-done");
+        var status = byId("copyStatus");
+        function fallback() {
+          var range = document.createRange();
+          range.selectNodeContents(source);
+          var selection = window.getSelection();
+          selection.removeAllRanges();
+          selection.addRange(range);
+          var copied = false;
+          try {
+            copied = document.execCommand("copy");
+          } catch (e) {
+            copied = false;
+          }
+          status.textContent = copied
+            ? done
+            : "No se pudo copiar solo: " + button.getAttribute("data-what") + " quedó seleccionado para que lo copies.";
         }
-        status.textContent = copied
-          ? "¡Alias copiado!"
-          : "No se pudo copiar solo: el alias quedó seleccionado para que lo copies.";
-      }
-      status.textContent = "";
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(aliasEl.textContent).then(function () {
-          status.textContent = "¡Alias copiado!";
-        }, fallback);
-      } else {
-        fallback();
-      }
+        status.textContent = "";
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(source.textContent).then(function () {
+            status.textContent = done;
+          }, fallback);
+        } else {
+          fallback();
+        }
+      });
     });
 
     // Sparkle sky: twinkling points and a few four-point glints on a fixed canvas behind the page.

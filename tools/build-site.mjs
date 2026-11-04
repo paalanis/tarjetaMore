@@ -203,7 +203,7 @@ try {
       dir: "transferencia",
       source: defaults.transfer,
       title: "Regalo · Mis XV de Morena",
-      description: "Datos para transferencia: alias y titular de la cuenta, con un botón para copiar el alias.",
+      description: "Datos para transferencia: alias, CVU y titular de la cuenta, y link de Mercado Pago.",
     },
     {
       dir: "confirmar",
