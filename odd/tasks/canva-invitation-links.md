@@ -79,6 +79,12 @@ to another page of the design, so they cannot open a panel or copy the alias. Ho
 - Canva moved the site to https://more-0512.my.canva.site/ (2026-10-25); every envelope CTA and both back links now use it (older entries above keep the old URL as history).
 - Pablo linked the Canva buttons to both pages.
 - Still placeholders: alias and account holder.
+- (2026-11-05) Pablo: "puede hacer que aparezca en otro camva lo que queria y como lo queria,
+  https://more-0512.my.canva.site/morena-xv hay que volver todo para atras y usar es link". The new Canva page
+  carries the music he wanted. A local, uncommitted attempt to embed a clone of the invitation (with music)
+  under the envelope was discarded; every envelope CTA and the four info pages' back links now use
+  https://more-0512.my.canva.site/morena-xv. Only the pages already in the repo were rebuilt (the general page
+  and the 6 guests), preview images unchanged; `npm test` 52/52.
 
 ## Next step
 
