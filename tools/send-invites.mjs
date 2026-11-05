@@ -50,11 +50,14 @@ const fail = (message) => {
   throw new SendError(message);
 };
 
-// An Argentine mobile number as WhatsApp wants it (549 + area + number, 13 digits), or "" when the cell
-// cannot be read safely, e.g. the old "15" local form.
+// A mobile number as WhatsApp wants it, or "" when the cell cannot be read safely, e.g. the old "15" local
+// form. Argentine numbers become 549 + area + number (13 digits); Spanish mobiles must carry their country
+// code and stay as 34 + 9 digits starting with 6 or 7 (11 digits, so they never clash with a 10-digit
+// Argentine number whose area code starts with 34).
 export function normalizePhone(raw) {
   let digits = String(raw ?? "").replace(/\D/g, "");
   if (digits.startsWith("00")) digits = digits.slice(2);
+  if (/^34[67]\d{8}$/.test(digits)) return digits;
   if (digits.startsWith("549") && digits.length === 13) return digits;
   if (digits.startsWith("54") && digits.length === 12) return "549" + digits.slice(2);
   if (digits.startsWith("0")) digits = digits.slice(1);
@@ -92,7 +95,7 @@ export function plan(list, { only = [] } = {}) {
   const pending = list.guests.filter((g) => !g.sent && (!only.length || only.includes(g.id)));
   const bad = pending.filter((g) => !normalizePhone(g.phone));
   if (bad.length) {
-    fail("fix these phones in the sheet (area code + number, e.g. 2613829997):\n" +
+    fail("fix these phones in the sheet (area code + number, e.g. 2613829997; Spain: 34 + number, e.g. 34612345678):\n" +
       bad.map((g) => `  ${g.id}: "${g.phone}"`).join("\n"));
   }
   return pending.map((g) => ({

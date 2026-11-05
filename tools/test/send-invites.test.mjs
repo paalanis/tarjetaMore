@@ -54,6 +54,18 @@ test("normalizePhone turns Argentine mobiles into 549 + 10 digits and refuses un
   assert.equal(normalizePhone(null), "");
 });
 
+test("normalizePhone keeps Spanish mobiles as 34 + 9 digits", () => {
+  const cases = {
+    "34653371327": "34653371327",
+    "+34 653 37 13 27": "34653371327",
+    "0034 604 879 512": "34604879512",
+    "34 712 345 678": "34712345678",
+    "34953371327": "",
+    "3413829997": "5493413829997",
+  };
+  for (const [raw, expected] of Object.entries(cases)) assert.equal(normalizePhone(raw), expected, raw);
+});
+
 test("composeMessage replaces {link} or adds the link after a blank line", () => {
   const link = envelopeUrl("familia-perez");
   assert.equal(link, "https://paalanis.github.io/tarjetaMore/familia-perez/");
