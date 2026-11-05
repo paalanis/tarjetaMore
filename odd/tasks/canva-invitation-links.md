@@ -70,7 +70,7 @@ to another page of the design, so they cannot open a panel or copy the alias. Ho
 - Native review (T1-T2a range): medium, granted, approved, acknowledged. Advisory follow-ups: "Copiar alias"
   still copies the placeholder text until the real alias is set; no automated assertion for the CTA href;
   og render drift between machines.
-- Restrictions content set by Pablo: "Dress code" / "No utilizar color" / "Rosa, Plateado, Lila y Champagne",
+- Restrictions content set by Pablo: "Dress code" / "No utilizar color" / "Rosa, Plateado, Lila, Champagne y Celeste",
   with four crossed-out color dots; "Formal - Elegante" removed from this page (it stays in the Canva section).
   Checked at 360 and 430px: no console errors, no horizontal scroll; parent checked the screenshot.
 - Pablo asked to drop the crown and the "Mis XV · Morena" script title from both pages; removed with their
