@@ -20,7 +20,8 @@
 // Sheet mode (--sheet, used by build:sheet) takes the guests from the Google Sheet instead: it fetches
 // <rsvpEndpoint>?action=list, where rsvpEndpoint is read from the CONFIG in prototype/confirm.html so the
 // URL lives in one place, and builds one page per row with the sheet `id` as the slug (lowercased) and
-// `nombre` as the displayed name. Any error from the script (such as duplicate_id), the network, or an id
+// `nombre` as the displayed name (a name typed all in capitals is shown as "Marcos Sebastianelli y Flia.").
+// Any error from the script (such as duplicate_id), the network, or an id
 // that is unusable or reserved (a build folder, or `general`) stops the build before a page is written.
 // That logic lives in tools/sheet-guests.mjs, covered by `npm test`. The RSVP_ENDPOINT environment
 // variable overrides the URL. Neither mode deletes pages: a family removed from the sheet keeps a stale

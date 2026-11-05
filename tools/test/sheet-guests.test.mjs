@@ -139,6 +139,28 @@ test("uppercase ids are lowercased", () => {
     [{ name: "Familia Pérez", slug: "familia-perez" }]);
 });
 
+test("names written in capitals are shown with an initial capital per word", () => {
+  assert.deepEqual(validateGuests([
+    { id: "marcos", name: "MARCOS SEBASTIANELLI Y FLIA." },
+    { id: "omar", name: " OMAR SEBASTIANELLI Y SRA. " },
+    { id: "jose", name: "JOSÉ DE LA PEÑA" },
+    { id: "ana", name: "ANA MARÍA O'NEILL-RUIZ" },
+    { id: "analia", name: "ANALIA DEL PICCOLO" },
+  ]), [
+    { name: "Marcos Sebastianelli y Flia.", slug: "marcos" },
+    { name: "Omar Sebastianelli y Sra.", slug: "omar" },
+    { name: "José de la Peña", slug: "jose" },
+    { name: "Ana María O'Neill-Ruiz", slug: "ana" },
+    // "Del" in a surname such as Del Piccolo keeps its capital.
+    { name: "Analia Del Piccolo", slug: "analia" },
+  ]);
+});
+
+test("names that already use lowercase letters are kept as written", () => {
+  assert.deepEqual(validateGuests([{ id: "a", name: "Juan DE LA Cruz" }, { id: "b", name: "familia lópez" }]),
+    [{ name: "Juan DE LA Cruz", slug: "a" }, { name: "familia lópez", slug: "b" }]);
+});
+
 test("ids that lowercase to the same slug are duplicates", () => {
   assert.throws(() => validateGuests([{ id: "familia-perez", name: "A" }, { id: "Familia-Perez", name: "B" }]),
     /the id "familia-perez" is used by more than one guest/);

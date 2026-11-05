@@ -26,6 +26,21 @@ export function readEndpoint(confirmPath, env = process.env) {
   return config[1];
 }
 
+// Spanish joining words kept lowercase inside a name ("Marcos Sebastianelli y Flia.", "José de la Peña").
+// "del" is left out on purpose: in this list it starts surnames such as Del Piccolo.
+const lowercaseWords = new Set(["y", "e", "de", "la", "las", "los"]);
+
+// Names typed in capitals in the sheet read badly in the envelope's script font, so a name with no lowercase
+// letter gets an initial capital per word (and after - or '). Names already using lowercase stay as written.
+export function displayName(name) {
+  if (/\p{Ll}/u.test(name)) return name;
+  return name.toLocaleLowerCase("es").split(" ").map((word, i) =>
+    i > 0 && lowercaseWords.has(word)
+      ? word
+      : word.replace(/(^|[-'])(\p{L})/gu, (m, sep, letter) => sep + letter.toLocaleUpperCase("es"))
+  ).join(" ");
+}
+
 // Checks the {id, name} rows of a successful list response and returns them as {name, slug} pairs.
 // The script already checks these; checking again keeps a bad response from writing odd folders.
 // Ids are lowercased, since GitHub Pages URLs are case-sensitive.
@@ -40,7 +55,7 @@ export function validateGuests(rows) {
     if (reservedSlugs.has(slug)) fail(`guest "${guest}" uses the reserved id "${slug}"`);
     if (seen.has(slug)) fail(`the id "${slug}" is used by more than one guest`);
     seen.add(slug);
-    return { name: guest, slug };
+    return { name: displayName(guest), slug };
   });
 }
 
