@@ -15,7 +15,7 @@ const HEADER = [
   "id", "nombre", "telefono", "cantidadInvitados", "Confirmado", "fechaConfirmacion",
   "celiacos", "vegetarianos", "veganos", "otraRestriccion",
 ];
-const NO_DIET = { celiac: null, vegetarian: null, vegan: null, otherDiet: "", message: "" };
+const NO_DIET = { celiac: null, vegetarian: null, vegan: null, otherDiet: "", message: "", notify: "" };
 
 // Loads Code.gs over a copy of rows. `busy` makes the script lock time out; `properties` are the script
 // properties; `message` is cell A1 of the "Mensaje" tab, which is absent when message is undefined.
@@ -135,7 +135,7 @@ test("doGet ?id= finds rows case-insensitively, including rows whose id cell is 
     { ok: true, id: "familia-perez", name: "Familia Pérez", max: 4, confirmed: null, ...NO_DIET });
   assert.deepEqual(script.get({ id: " tia-ana " }), {
     ok: true, id: "tia-ana", name: "Tía Ana Gómez", max: 2, confirmed: 1,
-    celiac: 1, vegetarian: 0, vegan: 0, otherDiet: "Sin lactosa", message: "",
+    celiac: 1, vegetarian: 0, vegan: 0, otherDiet: "Sin lactosa", message: "", notify: "",
   });
   assert.deepEqual(script.get({ id: "nadie" }), { ok: false, error: "not_found" });
   assert.deepEqual(script.get({}), { ok: false, error: "not_found" });
@@ -156,14 +156,23 @@ test("doPost rejects counts outside 0..max, unknown ids and bad bodies without w
   assert.equal(script.held(), 0);
 });
 
+test("the guest's notify number comes from the optional avisar column, ready for wa.me", () => {
+  const rows = sampleRows().map((row, i) => [...row, i === 0 ? "avisar" : i === 1 ? " 261 721-2073 " : i === 2 ? "abc" : ""]);
+  const script = loadScript(rows);
+  assert.equal(script.get({ id: "familia-perez" }).notify, "5492617212073");
+  assert.equal(script.get({ id: "tia-ana" }).notify, "", "an unusable number falls back to the page default");
+  assert.equal(script.post({ id: "familia-perez", count: 2 }).notify, "5492617212073", "the answer to a save carries it too");
+  assert.equal(loadScript(sampleRows()).get({ id: "familia-perez" }).notify, "", "no avisar column");
+});
+
 test("doPost saves a valid count and the confirmation date on the guest's row only", () => {
   const script = loadScript(sampleRows());
   assert.deepEqual(script.post({ id: "FAMILIA-PEREZ", count: 4 }),
     { ok: true, id: "familia-perez", name: "Familia Pérez", max: 4, confirmed: 4,
-      celiac: 0, vegetarian: 0, vegan: 0, otherDiet: "", message: "" });
+      celiac: 0, vegetarian: 0, vegan: 0, otherDiet: "", message: "", notify: "" });
   assert.deepEqual(script.post({ id: "tia-ana", count: 0 }),
     { ok: true, id: "tia-ana", name: "Tía Ana Gómez", max: 2, confirmed: 0,
-      celiac: 0, vegetarian: 0, vegan: 0, otherDiet: "", message: "" });
+      celiac: 0, vegetarian: 0, vegan: 0, otherDiet: "", message: "", notify: "" });
   assert.equal(script.grid[1][4], 4);
   assert.equal(Object.prototype.toString.call(script.grid[1][5]), "[object Date]");
   assert.equal(script.grid[2][4], 0);
@@ -177,7 +186,7 @@ test("doPost saves dietary counts and the other-restriction text on the guest's 
   const body = { id: "familia-perez", count: 3, celiac: 1, vegetarian: 2, vegan: 0, otherDiet: "  Alergia   al maní " };
   assert.deepEqual(script.post(body), {
     ok: true, id: "familia-perez", name: "Familia Pérez", max: 4, confirmed: 3,
-    celiac: 1, vegetarian: 2, vegan: 0, otherDiet: "Alergia al maní", message: "",
+    celiac: 1, vegetarian: 2, vegan: 0, otherDiet: "Alergia al maní", message: "", notify: "",
   });
   assert.deepEqual(script.grid[1].slice(6), [1, 2, 0, "Alergia al maní"]);
   assert.deepEqual(script.get({ id: "familia-perez" }).otherDiet, "Alergia al maní");

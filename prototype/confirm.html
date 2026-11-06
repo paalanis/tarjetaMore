@@ -420,8 +420,10 @@
       });
     }
 
+    // The guest's own confirmation number (the sheet's `avisar` column) when the sheet gives one, else rsvpPhone.
     function whatsappUrl(text) {
-      return "https://wa.me/" + CONFIG.rsvpPhone + "?text=" + encodeURIComponent(text);
+      var phone = guest && guest.notify ? guest.notify : CONFIG.rsvpPhone;
+      return "https://wa.me/" + phone + "?text=" + encodeURIComponent(text);
     }
 
     // answer is the POST body ({count, celiac, vegetarian, vegan, otherDiet}), or null before the guest loads.
@@ -506,7 +508,10 @@
     }
 
     function showForm(data) {
-      guest = { id: data.id, name: data.name, max: Math.max(0, Math.floor(Number(data.max)) || 0) };
+      guest = {
+        id: data.id, name: data.name, max: Math.max(0, Math.floor(Number(data.max)) || 0),
+        notify: typeof data.notify === "string" && /^\d{11,13}$/.test(data.notify) ? data.notify : ""
+      };
       var previous = data.confirmed;
       var hasPrevious = typeof previous === "number" && previous >= 0 && previous <= guest.max;
       count = hasPrevious ? previous : guest.max;

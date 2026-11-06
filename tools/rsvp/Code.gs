@@ -14,7 +14,10 @@
 // tools/test/code-gs.test.mjs (`npm test`).
 //
 // GET  ?id=<slug>                      -> {ok, id, name, max, confirmed, celiac, vegetarian, vegan, otherDiet,
-//                                         message}; message is "" until the optional `mensaje` column exists.
+//                                         message, notify}; message is "" until the optional `mensaje` column
+//                                         exists; notify is the optional `avisar` column (the number the
+//                                         guest's confirmation goes to by WhatsApp) as 549... digits, or ""
+//                                         when it is empty or unusable, so docs/confirmar/ uses its default.
 // GET  ?action=list                    -> {ok, guests: [{id, name}]} in sheet order, for the site build;
 //                                         {ok: false, error: "duplicate_id", ids} when two rows share an id
 //                                         and {ok: false, error: "empty_id", rows} when a nombre slugifies
@@ -52,6 +55,8 @@ var OTHER_DIET_MAX = 200;
 var SEND_HEADERS = ["telefono", "Enviado"];
 // Optional: the number that sends each row (tools/send-invites.mjs --from); empty means the default phone.
 var SENDER_HEADER = "envia";
+// Optional: the number a row's confirmation goes to (docs/confirmar/); empty means the page default.
+var NOTIFY_HEADER = "avisar";
 var SEND_KEY_MIN = 16;
 // Columns for the message to Morena (docs/mensaje/), also optional.
 var MESSAGE_HEADERS = ["mensaje", "fechaMensaje"];
@@ -262,10 +267,23 @@ function findGuest_(id) {
       max: Number(row[data.cols.cantidadInvitados]) || 0,
       confirmed: countCell_(confirmed),
       diet: diet,
-      message: data.cols.mensaje === undefined ? "" : String(row[data.cols.mensaje]).trim()
+      message: data.cols.mensaje === undefined ? "" : String(row[data.cols.mensaje]).trim(),
+      notify: data.cols[NOTIFY_HEADER] === undefined ? "" : whatsappNumber_(row[data.cols[NOTIFY_HEADER]])
     };
   }
   return null;
+}
+
+// A phone cell as wa.me wants it, the same rules as normalizePhone in tools/send-invites.mjs: Argentine
+// numbers become 549 + area + number, Spanish mobiles stay 34 + 9 digits; anything else gives "".
+function whatsappNumber_(cell) {
+  var digits = String(cell).replace(/\D/g, "");
+  if (digits.indexOf("00") === 0) digits = digits.slice(2);
+  if (/^34[67]\d{8}$/.test(digits)) return digits;
+  if (digits.indexOf("549") === 0 && digits.length === 13) return digits;
+  if (digits.indexOf("54") === 0 && digits.length === 12) return "549" + digits.slice(2);
+  if (digits.indexOf("0") === 0) digits = digits.slice(1);
+  return digits.length === 10 ? "549" + digits : "";
 }
 
 // A leading = + - @ would make the sheet read a guest's text as a formula; the apostrophe keeps it text.
@@ -289,7 +307,7 @@ function readSheet_() {
     if (index === -1) throw new Error("Missing column: " + name);
     cols[name] = index;
   });
-  SEND_HEADERS.concat(MESSAGE_HEADERS, [SENDER_HEADER]).forEach(function (name) {
+  SEND_HEADERS.concat(MESSAGE_HEADERS, [SENDER_HEADER, NOTIFY_HEADER]).forEach(function (name) {
     if (header.indexOf(name) !== -1) cols[name] = header.indexOf(name);
   });
   return { sheet: sheet, values: values, cols: cols };
@@ -328,7 +346,7 @@ function publicGuest_(guest) {
   return {
     ok: true, id: guest.id, name: guest.name, max: guest.max, confirmed: guest.confirmed,
     celiac: guest.diet.celiac, vegetarian: guest.diet.vegetarian, vegan: guest.diet.vegan,
-    otherDiet: guest.diet.otherDiet, message: guest.message
+    otherDiet: guest.diet.otherDiet, message: guest.message, notify: guest.notify
   };
 }
 
