@@ -4,14 +4,19 @@
 // of tools/rsvp/Code.gs (the message is cell A1 of the `Mensaje` tab; "{link}" in it is replaced by the
 // family's envelope URL, otherwise the URL is added at the end). Each sent family gets a date in `Enviado`
 // through `mark-sent`, so a rerun skips it. Families need not be saved as contacts: chats are opened by
-// number. Between messages the script waits 20-60 s at random, and 5 minutes after every 20 messages.
+// number. Between messages the script waits 8-15 s at random, and 90-120 s after every 20 messages.
+//
+// Rows can go out from different phones: the optional `envia` column holds the number that sends each row.
+// A plain run sends only the rows with an empty `envia`; `--from <number>` sends only that number's rows,
+// in a WhatsApp Web session of its own (its own Chrome profile and QR code).
 //
 // The key is the SEND_KEY environment variable, else the first line of `.send-key` at the repo root
-// (ignored by git). WhatsApp Web runs in Chrome with its own profile outside the repo, so the QR code is
-// scanned only on the first run.
+// (ignored by git). WhatsApp Web runs in Chrome with its own profile outside the repo (one per sending
+// number), so the QR code is scanned only on the first run.
 //
 //   npm run send -- --dry-run                       list what would be sent; no browser, no writes
 //   npm run send -- --only pablo-alanis,romina-gonzalez   send to these ids only (still skips sent ones)
+//   npm run send -- --from 2617212073               send the rows whose `envia` is this number
 //
 // Anything unexpected (an invalid phone in the sheet, a chat that does not open, a link preview that does
 // not load, a message that does not show as sent) stops the run; families already sent stay marked.
@@ -72,8 +77,8 @@ export function composeMessage(message, link) {
 
 // Milliseconds to wait after the nth message sent in this run (n starts at 1).
 export function pauseAfter(n, random = Math.random) {
-  if (n % REST_EVERY === 0) return 5 * 60_000 + Math.round(random() * 60_000);
-  return 20_000 + Math.round(random() * 40_000);
+  if (n % REST_EVERY === 0) return 90_000 + Math.round(random() * 30_000);
+  return 8_000 + Math.round(random() * 7_000);
 }
 
 export function readKey(env = process.env, keyPath = join(root, ".send-key")) {
@@ -85,14 +90,22 @@ export function readKey(env = process.env, keyPath = join(root, ".send-key")) {
   }
 }
 
-// The families to send to, in sheet order, each with its WhatsApp number and text. Fails before anything is
-// sent when the message is empty, an --only id is unknown, or a pending family has an unusable phone.
-export function plan(list, { only = [] } = {}) {
+// The families to send to, in sheet order, each with its WhatsApp number and text. Only the rows of the
+// sender go: those with an empty `envia` without --from, else those whose `envia` is the --from number.
+// Fails before anything is sent when the message is empty, an --only id is unknown, the --from number is
+// unusable, the sheet script is too old to return `envia`, or a pending family has an unusable phone.
+export function plan(list, { only = [], from = "" } = {}) {
   if (!list.message) fail('the message is empty: write it in cell A1 of the "Mensaje" tab');
+  const sender = from ? normalizePhone(from) : "";
+  if (from && !sender) fail(`--from "${from}" is not a valid number (area code + number, e.g. 2617212073)`);
+  if (list.guests.some((g) => typeof g.from !== "string")) {
+    fail("the sheet script does not return envia yet: deploy the new version of tools/rsvp/Code.gs");
+  }
+  const senderOf = (g) => (g.from ? normalizePhone(g.from) || g.from : "");
   const ids = new Set(list.guests.map((g) => g.id));
   const unknown = only.filter((id) => !ids.has(id));
   if (unknown.length) fail(`unknown id(s) in --only: ${unknown.join(", ")}`);
-  const pending = list.guests.filter((g) => !g.sent && (!only.length || only.includes(g.id)));
+  const pending = list.guests.filter((g) => !g.sent && senderOf(g) === sender && (!only.length || only.includes(g.id)));
   const bad = pending.filter((g) => !normalizePhone(g.phone));
   if (bad.length) {
     fail("fix these phones in the sheet (area code + number, e.g. 2613829997; Spain: 34 + number, e.g. 34612345678):\n" +
@@ -222,22 +235,27 @@ export async function waitForLogin(page, { whatsappUrl = WHATSAPP_URL, log = con
 }
 
 function parseArgs(argv) {
-  const args = { dryRun: false, only: [] };
+  const args = { dryRun: false, only: [], from: "" };
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === "--dry-run") args.dryRun = true;
     else if (argv[i] === "--only") args.only = String(argv[++i] || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
-    else fail(`unknown option ${argv[i]} (use --dry-run or --only id1,id2)`);
+    else if (argv[i] === "--from") args.from = String(argv[++i] || "").trim();
+    else fail(`unknown option ${argv[i]} (use --dry-run, --only id1,id2 or --from 2617212073)`);
   }
   if (argv.includes("--only") && !args.only.length) fail("--only needs ids, e.g. --only pablo-alanis,romina-gonzalez");
+  if (argv.includes("--from") && !args.from) fail("--from needs the sending number, e.g. --from 2617212073");
   return args;
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// Chrome with its own profile outside the repo, kept between runs so the QR code is scanned once.
-async function openChrome() {
+// The Chrome profile of a sending number (549... form), outside the repo; a plain run keeps the original one.
+export const profileDir = (sender) => join(homedir(), ".tarjetamore-whatsapp" + (sender ? "-" + sender : ""));
+
+// Chrome with that profile, kept between runs so the QR code is scanned once per number.
+async function openChrome(dir) {
   const { chromium } = await import("playwright");
-  return chromium.launchPersistentContext(join(homedir(), ".tarjetamore-whatsapp"), {
+  return chromium.launchPersistentContext(dir, {
     channel: "chrome",
     headless: false,
     viewport: null,
@@ -263,7 +281,7 @@ export async function main(
     return;
   }
 
-  const context = await openBrowser();
+  const context = await openBrowser(profileDir(args.from ? normalizePhone(args.from) : ""));
   try {
     const page = context.pages()[0] || (await context.newPage());
     await waitForLogin(page, { log });

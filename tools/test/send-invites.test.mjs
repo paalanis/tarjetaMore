@@ -29,9 +29,11 @@ const list = () => ({
   ok: true,
   message: "Hola, te invitamos a los XV de Morena",
   guests: [
-    { id: "familia-perez", name: "Familia Pérez", phone: "261 382-9997", sent: false },
-    { id: "tia-ana", name: "Tía Ana", phone: "5492610000002", sent: true },
-    { id: "jose-nunez", name: "José Núñez", phone: "+54 261 511-1111", sent: false },
+    { id: "familia-perez", name: "Familia Pérez", phone: "261 382-9997", sent: false, from: "" },
+    { id: "tia-ana", name: "Tía Ana", phone: "5492610000002", sent: true, from: "" },
+    { id: "jose-nunez", name: "José Núñez", phone: "+54 261 511-1111", sent: false, from: "" },
+    { id: "primo-luis", name: "Primo Luis", phone: "2615222222", sent: false, from: "261 721-2073" },
+    { id: "prima-sol", name: "Prima Sol", phone: "2615333333", sent: true, from: "2617212073" },
   ],
 });
 
@@ -73,16 +75,16 @@ test("composeMessage replaces {link} or adds the link after a blank line", () =>
   assert.equal(composeMessage("Mirá {link} y {link}", link), `Mirá ${link} y ${link}`);
 });
 
-test("pauseAfter waits 20-60 s, and 5-6 minutes after every 20th message", () => {
-  assert.equal(pauseAfter(1, () => 0), 20_000);
-  assert.equal(pauseAfter(1, () => 1), 60_000);
-  assert.equal(pauseAfter(19, () => 0.5), 40_000);
-  assert.equal(pauseAfter(20, () => 0), 300_000);
-  assert.equal(pauseAfter(40, () => 1), 360_000);
+test("pauseAfter waits 8-15 s, and 90-120 s after every 20th message", () => {
+  assert.equal(pauseAfter(1, () => 0), 8_000);
+  assert.equal(pauseAfter(1, () => 1), 15_000);
+  assert.equal(pauseAfter(19, () => 0.5), 11_500);
+  assert.equal(pauseAfter(20, () => 0), 90_000);
+  assert.equal(pauseAfter(40, () => 1), 120_000);
   for (let n = 1; n < 60; n++) {
     const ms = pauseAfter(n);
-    if (n % 20) assert.ok(ms >= 20_000 && ms <= 60_000, `${n}: ${ms}`);
-    else assert.ok(ms >= 300_000 && ms <= 360_000, `${n}: ${ms}`);
+    if (n % 20) assert.ok(ms >= 8_000 && ms <= 15_000, `${n}: ${ms}`);
+    else assert.ok(ms >= 90_000 && ms <= 120_000, `${n}: ${ms}`);
   }
 });
 
@@ -111,6 +113,21 @@ test("plan stops before sending on an empty message, an unknown --only id or a b
   assert.throws(() => plan(bad), /jose-nunez: "261 15 5111111"/);
   bad.guests[2].sent = true;
   assert.equal(plan(bad).length, 1, "a bad phone on a family already sent does not block");
+});
+
+test("plan sends only the rows of the sender: no --from takes rows with an empty envia, --from takes that number's", () => {
+  assert.deepEqual(plan(list()).map((i) => i.id), ["familia-perez", "jose-nunez"]);
+  assert.deepEqual(plan(list(), { from: "2617212073" }).map((i) => i.id), ["primo-luis"]);
+  assert.deepEqual(plan(list(), { from: "+54 9 261 721 2073" }).map((i) => i.id), ["primo-luis"], "any way of writing the number");
+  assert.deepEqual(plan(list(), { from: "2610000000" }), [], "a number no row carries sends nothing");
+  assert.deepEqual(plan(list(), { only: ["primo-luis"] }), [], "--only never reaches another sender's rows");
+});
+
+test("plan stops on a bad --from number or a sheet script that does not return envia yet", () => {
+  assert.throws(() => plan(list(), { from: "123" }), (e) => e instanceof SendError && /--from "123" is not a valid number/.test(e.message));
+  const old = list();
+  old.guests.forEach((g) => { delete g.from; });
+  assert.throws(() => plan(old), /deploy the new version of tools\/rsvp\/Code\.gs/);
 });
 
 test("readKey prefers SEND_KEY, else the first line of the key file, else empty", () => {
@@ -169,6 +186,7 @@ test("main refuses bad options and a missing key before calling the sheet", asyn
   const opts = { env: { RSVP_ENDPOINT: ENDPOINT, SEND_KEY: KEY }, log: () => {}, fetchImpl: fake.impl, openBrowser: noBrowser };
   await assert.rejects(main(["--fast"], opts), /unknown option --fast/);
   await assert.rejects(main(["--only"], opts), /--only needs ids/);
+  await assert.rejects(main(["--from"], opts), /--from needs the sending number/);
   const noKey = { ...opts, env: { RSVP_ENDPOINT: ENDPOINT }, keyPath: join(tmpdir(), "no-such-dir-send-key", ".send-key") };
   await assert.rejects(main(["--dry-run"], noKey), /no key/);
   assert.equal(fake.calls.length, 0);
@@ -180,4 +198,19 @@ test("main with nothing pending says so and opens no browser", async () => {
   const lines = [];
   await main([], { env: { RSVP_ENDPOINT: ENDPOINT, SEND_KEY: KEY }, log: (l) => lines.push(l), fetchImpl: fakeFetch(() => done).impl, openBrowser: noBrowser });
   assert.deepEqual(lines, ["Nothing to send: every family in the selection is already marked in Enviado."]);
+});
+
+test("--from lists that sender's rows and opens Chrome with a WhatsApp profile of its own", async () => {
+  const lines = [];
+  const env = { RSVP_ENDPOINT: ENDPOINT, SEND_KEY: KEY };
+  await main(["--dry-run", "--from", "2617212073"], { env, log: (l) => lines.push(l), fetchImpl: fakeFetch(() => list()).impl, openBrowser: noBrowser });
+  const out = lines.join("\n");
+  assert.match(out, /--- primo-luis -> \+5492615222222/);
+  assert.doesNotMatch(out, /familia-perez/);
+  const profiles = [];
+  const record = async (dir) => { profiles.push(dir); throw new Error("stop here"); };
+  await assert.rejects(main(["--from", "2617212073"], { env, log: () => {}, fetchImpl: fakeFetch(() => list()).impl, openBrowser: record }), /stop here/);
+  await assert.rejects(main([], { env, log: () => {}, fetchImpl: fakeFetch(() => list()).impl, openBrowser: record }), /stop here/);
+  assert.match(profiles[0], /\.tarjetamore-whatsapp-5492617212073$/);
+  assert.match(profiles[1], /\.tarjetamore-whatsapp$/, "your own WhatsApp keeps its existing profile");
 });

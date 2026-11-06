@@ -252,8 +252,8 @@ test("send-list returns the message and every guest with phone and sent flag, gi
     ok: true,
     message: "Hola, te invitamos a los XV de Morena",
     guests: [
-      { id: "familia-perez", name: "Familia Pérez", phone: "261 382-9997", sent: false },
-      { id: "tia-ana", name: "Tía Ana Gómez", phone: "5492610000002", sent: true },
+      { id: "familia-perez", name: "Familia Pérez", phone: "261 382-9997", sent: false, from: "" },
+      { id: "tia-ana", name: "Tía Ana Gómez", phone: "5492610000002", sent: true, from: "" },
     ],
   });
   assert.deepEqual(script.grid, sendRows(), "send-list never writes");
@@ -275,6 +275,12 @@ test("send actions refuse a wrong, missing or unset key without revealing phones
     const key = properties.SEND_KEY;
     assert.deepEqual(script.post({ action: "send-list", key }), { ok: false, error: "forbidden" }, JSON.stringify(properties));
   }
+});
+
+test("send-list returns the envia column as from, trimmed, when the sheet has it", () => {
+  const rows = sendRows().map((row, i) => [...row, i === 0 ? "envia" : i === 2 ? " 2617212073 " : ""]);
+  const script = loadScript(rows, { properties: { SEND_KEY: KEY }, message: "Hola" });
+  assert.deepEqual(script.post({ action: "send-list", key: KEY }).guests.map((g) => g.from), ["", "2617212073"]);
 });
 
 test("send-list reports a missing Mensaje tab and returns an empty message as is", () => {

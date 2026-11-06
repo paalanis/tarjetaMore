@@ -31,9 +31,11 @@
 //                                         (docs/mensaje/); 1-300 characters, else {ok: false, error:
 //                                         "invalid_message"}. Needs no key.
 // POST {"action": "send-list", "key": "<SEND_KEY>"}
-//                                      -> {ok, message, guests: [{id, name, phone, sent}]} for
-//                                         tools/send-invites.mjs; message is cell A1 of the `Mensaje` tab and
-//                                         sent is whether the `Enviado` cell has a value.
+//                                      -> {ok, message, guests: [{id, name, phone, sent, from}]} for
+//                                         tools/send-invites.mjs; message is cell A1 of the `Mensaje` tab,
+//                                         sent is whether the `Enviado` cell has a value and from is the
+//                                         optional `envia` column (the number that sends that row; "" when
+//                                         the column or the cell is empty).
 // POST {"action": "mark-sent", "key": "<SEND_KEY>", "id": "<slug>"}
 //                                      -> {ok, id} after writing the date into `Enviado`.
 //                                         A wrong key gives {ok: false, error: "forbidden"}. Set the key in
@@ -48,6 +50,8 @@ var DIET_COUNTS = { celiac: "celiacos", vegetarian: "vegetarianos", vegan: "vega
 var OTHER_DIET_MAX = 200;
 // Columns only the bulk-send actions need; mapped when present, never required by readSheet_.
 var SEND_HEADERS = ["telefono", "Enviado"];
+// Optional: the number that sends each row (tools/send-invites.mjs --from); empty means the default phone.
+var SENDER_HEADER = "envia";
 var SEND_KEY_MIN = 16;
 // Columns for the message to Morena (docs/mensaje/), also optional.
 var MESSAGE_HEADERS = ["mensaje", "fechaMensaje"];
@@ -167,7 +171,8 @@ function sendList_() {
       id: effectiveId_(row, data.cols),
       name: name,
       phone: String(row[data.cols.telefono]).trim(),
-      sent: String(row[data.cols.Enviado]).trim() !== ""
+      sent: String(row[data.cols.Enviado]).trim() !== "",
+      from: data.cols[SENDER_HEADER] === undefined ? "" : String(row[data.cols[SENDER_HEADER]]).trim()
     });
   }
   return { ok: true, message: String(messageSheet.getRange("A1").getValue()).trim(), guests: guests };
@@ -284,7 +289,7 @@ function readSheet_() {
     if (index === -1) throw new Error("Missing column: " + name);
     cols[name] = index;
   });
-  SEND_HEADERS.concat(MESSAGE_HEADERS).forEach(function (name) {
+  SEND_HEADERS.concat(MESSAGE_HEADERS, [SENDER_HEADER]).forEach(function (name) {
     if (header.indexOf(name) !== -1) cols[name] = header.indexOf(name);
   });
   return { sheet: sheet, values: values, cols: cols };
